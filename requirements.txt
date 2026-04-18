@@ -5,7 +5,7 @@ beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
 # Google Gemini API
-google-generativeai>=0.3.0
+google-genai>=1.0.0
 
 # LiteLLM for multi-provider AI support
 litellm>=1.70.0
@@ -19,4 +19,7 @@ webdriver-manager>=4.0.0
 
 # Data processing
 python-dateutil>=2.8.0
+
+# Web UI
+flask>=2.3.0
 

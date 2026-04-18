@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Universal Scraper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a; --surface:#111111; --surface2:#181818;
+  --border:#242424; --border2:#2e2e2e;
+  --accent:#10b981; --accent-dim:#059669; --accent-glow:rgba(16,185,129,.18);
+  --red:#ef4444; --yellow:#f59e0b; --blue:#3b82f6;
+  --text:#e2e8f0; --text2:#94a3b8; --text3:#475569;
+  --radius:10px; --font-mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.5}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+.app{display:flex;flex-direction:column;min-height:100vh;max-width:1200px;margin:0 auto;padding:0 20px}
+
+/* Header */
+header{display:flex;align-items:center;justify-content:space-between;padding:18px 0 16px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.logo svg{color:var(--accent)}
+.badge{font-size:11px;font-weight:600;padding:2px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;color:var(--text2)}
+.header-links{display:flex;gap:16px;font-size:13px}
+.header-links a{color:var(--text2)}.header-links a:hover{color:var(--text)}
+
+/* URL row */
+.url-row{display:flex;gap:10px;padding:24px 0 0}
+.url-input-wrap{flex:1}
+#url{width:100%;padding:12px 16px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:border-color .2s,box-shadow .2s}
+#url:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+#url::placeholder{color:var(--text3)}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border:none;border-radius:var(--radius);cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;transition:all .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-dim)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--border2);color:var(--text)}
+.btn-sm{padding:5px 12px;font-size:12px;border-radius:6px}
+
+/* Config card */
+.config-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:14px}
+.config-row{display:flex;gap:16px;flex-wrap:wrap}
+.config-row+.config-row{margin-top:14px}
+.field-group{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}
+.field-group.grow2{flex:2}
+label.fg-label{font-size:12px;font-weight:600;color:var(--text2);letter-spacing:.4px;text-transform:uppercase}
+
+/* Model select wrapper */
+.model-wrap{position:relative}
+.model-status{position:absolute;right:10px;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:4px;pointer-events:none}
+
+select,input[type=password],input[type=text],input[type=url]{
+  padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);
+  border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;
+  outline:none;transition:border-color .2s,box-shadow .2s;width:100%
+}
+select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+select option{background:var(--surface2)}
+
+.api-key-wrap{display:flex;gap:6px}
+.api-key-wrap input{flex:1}
+.api-key-wrap .btn-ghost{padding:9px 12px;flex-shrink:0}
+.key-hint{font-size:11px;color:var(--text3);margin-top:2px}
+.key-hint a{font-size:11px}
+
+/* Tags / chips */
+.tags-wrap{display:flex;flex-wrap:wrap;gap:6px;min-height:40px;padding:6px 8px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;align-items:center;cursor:text}
+.tags-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);border-radius:20px;font-size:12px;font-weight:500;color:var(--accent);white-space:nowrap}
+.tag button{background:none;border:none;cursor:pointer;color:var(--accent);opacity:.7;font-size:14px;line-height:1;padding:0}
+.tag button:hover{opacity:1}
+#field-input{border:none;background:transparent;outline:none;font-size:13px;color:var(--text);min-width:80px;flex:1}
+#field-input::placeholder{color:var(--text3)}
+
+/* Format toggle */
+.radio-group{display:flex;gap:10px}
+.radio-group label{display:flex;align-items:center;gap:6px;cursor:pointer;padding:8px 14px;border:1px solid var(--border2);border-radius:8px;font-size:13px;transition:all .15s;background:var(--surface2)}
+.radio-group label:has(input:checked){border-color:var(--accent);background:rgba(16,185,129,.08);color:var(--accent)}
+.radio-group input[type=radio]{accent-color:var(--accent)}
+
+/* Status bar */
+.status-bar{height:36px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);padding:0 2px;margin-top:8px}
+.spinner{width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.spinner-sm{width:12px;height:12px;border-width:1.5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-idle{background:var(--border2)}
+.dot-running{background:var(--accent);animation:pulse 1s ease infinite}
+.dot-done{background:var(--accent)}
+.dot-error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Output panels */
+.output-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;flex:1}
+@media(max-width:768px){.output-grid{grid-template-columns:1fr}}
+.panel{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;min-height:320px}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0}
+.panel-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text2)}
+.panel-actions{display:flex;gap:6px}
+.results-body{flex:1;overflow-y:auto;padding:14px;font-family:var(--font-mono);font-size:12.5px;line-height:1.7}
+.placeholder-msg{color:var(--text3);display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:8px;text-align:center}
+.placeholder-msg svg{opacity:.3}
+
+/* JSON syntax highlight */
+.json-key{color:#7dd3fc}.json-str{color:#86efac}.json-num{color:#fda4af}.json-bool{color:#f9a8d4}.json-null{color:#94a3b8}
+
+/* CSV table */
+.csv-table-wrap{overflow:auto;height:100%}
+.csv-table{border-collapse:collapse;font-size:12px;width:100%;min-width:max-content}
+.csv-table th{background:var(--surface2);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:7px 12px;border-bottom:2px solid var(--border2);text-align:left;white-space:nowrap;position:sticky;top:0}
+.csv-table td{padding:6px 12px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:top;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-table tr:hover td{background:rgba(255,255,255,.03)}
+.csv-table td:empty::after{content:"—";color:var(--text3)}
+
+/* Terminal */
+.terminal{flex:1;overflow-y:auto;padding:12px 14px;font-family:var(--font-mono);font-size:12px;line-height:1.65;background:#0d0d0d;color:#cdd6f4}
+.term-prompt{color:var(--accent);margin-bottom:4px;user-select:none}
+.log-line{display:flex;gap:8px;margin-bottom:2px;word-break:break-word}
+.log-ts{color:var(--text3);flex-shrink:0;font-size:11px}
+.log-level{flex-shrink:0;font-size:11px;font-weight:700;width:48px}
+.log-msg{flex:1}
+.level-INFO .log-level{color:var(--blue)}
+.level-DEBUG .log-level{color:var(--text3)}
+.level-WARNING .log-level{color:var(--yellow)}
+.level-ERROR .log-level{color:var(--red)}
+.level-ERROR .log-msg{color:var(--red)}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text3)}
+
+footer{padding:16px 0;text-align:center;font-size:12px;color:var(--text3);border-top:1px solid var(--border);margin-top:20px}
+
+/* Token bar */
+.token-bar{display:none;align-items:center;gap:10px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:8px;font-size:13px}
+.token-bar.visible{display:flex}
+.token-icon{color:var(--accent);font-size:15px}
+.token-total{font-weight:700;color:var(--text)}
+.token-split{color:var(--text2);font-size:12px}
+.token-split .in{color:#7dd3fc}.token-split .out{color:#86efac}
+.token-cache{font-size:11px;padding:2px 7px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);border-radius:20px;color:var(--accent)}
+.token-bar .btn-ghost{margin-left:auto;font-size:12px;padding:4px 12px;border-radius:6px}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:min(520px,92vw);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-title{font-weight:700;font-size:15px}
+.modal-close{background:none;border:none;cursor:pointer;color:var(--text2);font-size:20px;line-height:1;padding:0}
+.modal-close:hover{color:var(--text)}
+.modal-body{overflow-y:auto;padding:20px}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:4px}
+.stat-value{font-size:20px;font-weight:700;color:var(--text);font-family:var(--font-mono)}
+.stat-value.accent{color:var(--accent)}
+.section-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text2);margin-bottom:10px}
+.call-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px}
+.call-card:last-child{margin-bottom:0}
+.call-header{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.call-num{font-size:11px;font-weight:700;color:var(--text2)}
+.call-model{font-size:12px;font-family:var(--font-mono);color:var(--text)}
+.call-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;margin-left:auto}
+.badge-api{background:rgba(59,130,246,.12);color:var(--blue);border:1px solid rgba(59,130,246,.25)}
+.badge-cache{background:rgba(16,185,129,.1);color:var(--accent);border:1px solid rgba(16,185,129,.25)}
+.call-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--text2)}
+.call-row span:last-child{font-family:var(--font-mono);color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Header -->
+<header>
+  <div class="logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="2"/>
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+    </svg>
+    Universal Scraper
+    <span class="badge">v1.9.4</span>
+  </div>
+  <div class="header-links">
+    <a href="https://github.com/pushpenderindia/universal-scraper" target="_blank">GitHub</a>
+    <a href="https://github.com/pushpenderindia/universal-scraper/wiki" target="_blank">Docs</a>
+  </div>
+</header>
+
+<!-- URL input -->
+<div class="url-row">
+  <div class="url-input-wrap">
+    <input type="url" id="url" placeholder="https://example.com/jobs" autocomplete="off" spellcheck="false"/>
+  </div>
+  <button class="btn btn-primary" id="scrape-btn" onclick="startScrape()">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+    Scrape
+  </button>
+</div>
+
+<!-- Configuration -->
+<div class="config-card">
+  <div class="config-row">
+    <!-- Provider -->
+    <div class="field-group">
+      <label class="fg-label">Provider</label>
+      <select id="provider" onchange="onProviderChange()"></select>
+    </div>
+    <!-- Model -->
+    <div class="field-group">
+      <label class="fg-label">Model</label>
+      <div class="model-wrap">
+        <select id="model"></select>
+        <div class="model-status" id="model-spinner" style="display:none">
+          <div class="spinner spinner-sm"></div>
+        </div>
+      </div>
+    </div>
+    <!-- API Key -->
+    <div class="field-group grow2">
+      <label class="fg-label">API Key</label>
+      <div class="api-key-wrap">
+        <input type="password" id="api-key" placeholder="Paste your API key here" autocomplete="off"/>
+        <button class="btn btn-ghost" onclick="toggleKey()" title="Show / hide key">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="key-hint" id="key-hint"></div>
+    </div>
+  </div>
+
+  <div class="config-row">
+    <!-- Extraction fields -->
+    <div class="field-group grow2">
+      <label class="fg-label">Fields to Extract</label>
+      <div class="tags-wrap" id="tags-wrap" onclick="document.getElementById('field-input').focus()">
+        <input type="text" id="field-input" placeholder="Type a field name and press Enter…" onkeydown="onFieldKeydown(event)"/>
+      </div>
+    </div>
+    <!-- Output format -->
+    <div class="field-group">
+      <label class="fg-label">Output Format</label>
+      <div class="radio-group">
+        <label><input type="radio" name="format" value="json" checked/> JSON</label>
+        <label><input type="radio" name="format" value="csv"/> CSV</label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status bar -->
+<div class="status-bar">
+  <span class="status-dot dot-idle" id="status-dot"></span>
+  <span id="status-text">Ready</span>
+</div>
+
+<!-- Token usage bar -->
+<div class="token-bar" id="token-bar">
+  <span class="token-icon">⚡</span>
+  <span class="token-total" id="token-total">0</span>
+  <span style="color:var(--text2)">tokens</span>
+  <span class="token-split">
+    (<span class="in" id="token-in">0</span> prompt&nbsp;/&nbsp;<span class="out" id="token-out">0</span> completion)
+  </span>
+  <span class="token-cache" id="token-cache" style="display:none">Cache hit</span>
+  <button class="btn btn-ghost" onclick="openTokenModal()">Breakdown →</button>
+</div>
+
+<!-- Token breakdown modal -->
+<div class="modal-overlay" id="token-modal" onclick="onModalOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">⚡ Token Usage Breakdown</span>
+      <button class="modal-close" onclick="closeTokenModal()">×</button>
+    </div>
+    <div class="modal-body" id="token-modal-body"></div>
+  </div>
+</div>
+
+<!-- Output panels -->
+<div class="output-grid">
+  <!-- Results -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Results</span>
+      <div class="panel-actions">
+        <button class="btn btn-ghost btn-sm" onclick="copyResults()">Copy</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadResults()">Download</button>
+      </div>
+    </div>
+    <div class="results-body" id="results-body">
+      <div class="placeholder-msg">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M9 9h6M9 13h4"/>
+        </svg>
+        <span>Results will appear here</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Terminal logs -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Terminal Logs</span>
+      <div class="panel-actions">
+        <button class="btn btn-ghost btn-sm" onclick="clearLogs()">Clear</button>
+      </div>
+    </div>
+    <div class="terminal" id="terminal">
+      <div class="term-prompt">$ universal-scraper-ui --ready</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Universal Scraper &nbsp;·&nbsp; AI-powered web scraping &nbsp;·&nbsp;
+  <a href="https://github.com/pushpenderindia/universal-scraper" target="_blank">GitHub</a>
+</footer>
+</div><!-- /.app -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let providers      = {};
+let currentResult  = null;
+let currentFields  = [];
+let activeSource   = null;
+let modelFetchTimer = null;
+
+const DEFAULT_FIELDS = ["title", "url", "description"];
+
+// ── Bootstrap ──────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch("/api/providers");
+    providers = await res.json();
+    buildProviderSelect();
+    await onProviderChange();
+    DEFAULT_FIELDS.forEach(addField);
+  } catch (e) {
+    addLogLine("ERROR", "Failed to load config: " + e);
+  }
+
+  // Debounced model refresh whenever the API key is edited
+  document.getElementById("api-key").addEventListener("input", () => {
+    clearTimeout(modelFetchTimer);
+    modelFetchTimer = setTimeout(refreshModels, 800);
+  });
+}
+
+// ── Provider select ────────────────────────────────────────────────────────
+function buildProviderSelect() {
+  const sel = document.getElementById("provider");
+  sel.innerHTML = "";
+  for (const [key, cfg] of Object.entries(providers)) {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = cfg.name;
+    sel.appendChild(opt);
+  }
+}
+
+async function onProviderChange() {
+  const key = document.getElementById("provider").value;
+  const cfg = providers[key];
+  if (!cfg) return;
+
+  const keyInput = document.getElementById("api-key");
+  keyInput.placeholder = cfg.placeholder;
+  keyInput.value = cfg.saved_key || "";
+
+  const hint = document.getElementById("key-hint");
+  if (key === "ollama") {
+    hint.innerHTML = "No API key needed &nbsp;·&nbsp; <a href='" + cfg.docs_url + "' target='_blank'>Ollama setup →</a>";
+  } else if (cfg.saved_key) {
+    hint.innerHTML = "Key loaded from environment variable &nbsp;·&nbsp; <a href='" + cfg.docs_url + "' target='_blank'>Manage →</a>";
+  } else {
+    hint.innerHTML = "<a href='" + cfg.docs_url + "' target='_blank'>Get API key →</a>";
+  }
+
+  await refreshModels();
+}
+
+// ── Model dropdown ─────────────────────────────────────────────────────────
+async function refreshModels() {
+  const provider = document.getElementById("provider").value;
+  const apiKey   = document.getElementById("api-key").value.trim();
+  const modelSel = document.getElementById("model");
+  const spinner  = document.getElementById("model-spinner");
+
+  spinner.style.display = "flex";
+  modelSel.disabled = true;
+
+  try {
+    const params = new URLSearchParams({ provider });
+    if (apiKey) params.set("api_key", apiKey);
+
+    const data   = await fetch("/api/models?" + params).then(r => r.json());
+    const models = data.models || [];
+    const prevVal = modelSel.value;
+
+    modelSel.innerHTML = "";
+    if (models.length === 0) {
+      const opt = document.createElement("option");
+      opt.textContent = "No models found";
+      modelSel.appendChild(opt);
+    } else {
+      models.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        modelSel.appendChild(opt);
+      });
+      if (prevVal && models.includes(prevVal)) modelSel.value = prevVal;
+    }
+  } catch (e) {
+    addLogLine("ERROR", "Failed to load models: " + e);
+  } finally {
+    spinner.style.display = "none";
+    modelSel.disabled = false;
+  }
+}
+
+// ── Field chips ────────────────────────────────────────────────────────────
+function addField(name) {
+  name = name.trim().replace(/\s+/g, "_");
+  if (!name || currentFields.includes(name)) return;
+  currentFields.push(name);
+
+  const tag = document.createElement("span");
+  tag.className = "tag";
+  tag.dataset.field = name;
+  tag.innerHTML = escHtml(name) + `<button onclick="removeField('${escHtml(name)}')" title="Remove">×</button>`;
+  document.getElementById("tags-wrap").insertBefore(tag, document.getElementById("field-input"));
+}
+
+function removeField(name) {
+  currentFields = currentFields.filter(f => f !== name);
+  const el = document.querySelector(`.tag[data-field="${CSS.escape(name)}"]`);
+  if (el) el.remove();
+}
+
+function onFieldKeydown(e) {
+  if (e.key === "Enter" || e.key === ",") {
+    e.preventDefault();
+    addField(e.target.value.replace(/,/g, ""));
+    e.target.value = "";
+  } else if (e.key === "Backspace" && e.target.value === "" && currentFields.length) {
+    removeField(currentFields[currentFields.length - 1]);
+  }
+}
+
+// ── API key visibility ─────────────────────────────────────────────────────
+function toggleKey() {
+  const inp = document.getElementById("api-key");
+  inp.type = inp.type === "password" ? "text" : "password";
+}
+
+// ── Scrape ─────────────────────────────────────────────────────────────────
+async function startScrape() {
+  const url      = document.getElementById("url").value.trim();
+  const provider = document.getElementById("provider").value;
+  const model    = document.getElementById("model").value;
+  const apiKey   = document.getElementById("api-key").value.trim();
+  const fields   = [...currentFields];
+  const format   = document.querySelector("input[name=format]:checked").value;
+
+  if (!url)   { setStatus("error", "Please enter a URL"); return; }
+  if (!model) { setStatus("error", "Please select a model"); return; }
+  if (provider !== "ollama" && !apiKey) {
+    setStatus("error", "API key is required for this provider"); return;
+  }
+
+  setStatus("running", "Starting…");
+  document.getElementById("scrape-btn").disabled = true;
+  document.getElementById("results-body").innerHTML =
+    '<div class="placeholder-msg"><div class="spinner"></div><span>Scraping…</span></div>';
+  document.getElementById("token-bar").classList.remove("visible");
+  lastTokenUsage = null;
+  currentResult  = null;
+
+  addLogLine("INFO", `Scraping → ${url}`);
+
+  try {
+    const res = await fetch("/api/scrape", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, provider, model, api_key: apiKey, fields, format }),
+    });
+    const { job_id, error } = await res.json();
+    if (error) throw new Error(error);
+    streamJob(job_id);
+  } catch (e) {
+    setStatus("error", e.message);
+    document.getElementById("scrape-btn").disabled = false;
+    addLogLine("ERROR", e.message);
+  }
+}
+
+function streamJob(jobId) {
+  if (activeSource) activeSource.close();
+  const es = new EventSource(`/api/stream/${jobId}`);
+  activeSource = es;
+
+  es.onmessage = (evt) => {
+    const data = JSON.parse(evt.data);
+    if (data.type === "keepalive") return;
+
+    if (data.type === "done") {
+      es.close();
+      activeSource = null;
+      document.getElementById("scrape-btn").disabled = false;
+
+      if (data.error) {
+        setStatus("error", "Scraping failed");
+        document.getElementById("results-body").innerHTML =
+          `<div class="placeholder-msg" style="color:var(--red)">${escHtml(data.error)}</div>`;
+      } else {
+        currentResult = data.result;
+        const n = data.result?.metadata?.items_extracted ?? 0;
+        setStatus("done", `Done — ${n} item(s) extracted`);
+        renderResult(data.result);
+        updateTokenUsage(data.result?.token_usage);
+      }
+      return;
+    }
+
+    if (data.type === "log") {
+      setStatus("running", data.message.substring(0, 90));
+      addLogLine(data.level, data.message);
+    }
+  };
+
+  es.onerror = () => {
+    es.close();
+    activeSource = null;
+    document.getElementById("scrape-btn").disabled = false;
+    setStatus("error", "Connection lost");
+    addLogLine("ERROR", "SSE stream closed unexpectedly");
+  };
+}
+
+// ── Results panel ──────────────────────────────────────────────────────────
+function renderResult(result) {
+  const fmt  = document.querySelector("input[name=format]:checked").value;
+  const body = document.getElementById("results-body");
+  try {
+    if (fmt === "csv" && result.csv_content) {
+      body.innerHTML = buildCsvTable(result.csv_content);
+    } else {
+      body.innerHTML = `<pre style="margin:0">${syntaxHighlight(JSON.stringify(result, null, 2))}</pre>`;
+    }
+  } catch (e) {
+    body.textContent = String(result);
+  }
+}
+
+function buildCsvTable(csv) {
+  const lines = csv.trim().split("\n");
+  if (lines.length === 0) return "<div class='placeholder-msg'>No data</div>";
+
+  const parse = line => {
+    // Simple RFC-4180 aware split
+    const cols = [];
+    let cur = "", inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQ = !inQ; }
+      else if (ch === "," && !inQ) { cols.push(cur); cur = ""; }
+      else cur += ch;
+    }
+    cols.push(cur);
+    return cols.map(c => c.replace(/^"|"$/g, "").replace(/""/g, '"'));
+  };
+
+  const headers = parse(lines[0]);
+  const rows    = lines.slice(1).map(parse);
+
+  const th = headers.map(h => `<th>${escHtml(h)}</th>`).join("");
+  const tb = rows.map(r =>
+    "<tr>" + headers.map((_, i) => `<td title="${escHtml(r[i] ?? "")}">${escHtml(r[i] ?? "")}</td>`).join("") + "</tr>"
+  ).join("");
+
+  return `<div class="csv-table-wrap"><table class="csv-table"><thead><tr>${th}</tr></thead><tbody>${tb}</tbody></table></div>`;
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(
+      /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      m => {
+        let cls = "json-num";
+        if (/^"/.test(m))            cls = /:$/.test(m) ? "json-key" : "json-str";
+        else if (/true|false/.test(m)) cls = "json-bool";
+        else if (/null/.test(m))       cls = "json-null";
+        return `<span class="${cls}">${m}</span>`;
+      }
+    );
+}
+
+function copyResults() {
+  if (!currentResult) return;
+  const fmt     = document.querySelector("input[name=format]:checked").value;
+  const content = fmt === "csv" && currentResult.csv_content
+    ? currentResult.csv_content
+    : JSON.stringify(currentResult, null, 2);
+  navigator.clipboard
+    .writeText(content)
+    .then(() => setStatus("done", "Copied to clipboard!"))
+    .catch(() => setStatus("error", "Copy failed"));
+}
+
+function downloadResults() {
+  if (!currentResult) return;
+  const fmt = document.querySelector("input[name=format]:checked").value;
+  let blob, filename;
+
+  if (fmt === "csv" && currentResult.csv_content) {
+    blob     = new Blob([currentResult.csv_content], { type: "text/csv" });
+    filename = `scraped_${Date.now()}.csv`;
+  } else {
+    blob     = new Blob([JSON.stringify(currentResult, null, 2)], { type: "application/json" });
+    filename = `scraped_${Date.now()}.json`;
+  }
+
+  const a    = document.createElement("a");
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+}
+
+// ── Terminal ───────────────────────────────────────────────────────────────
+function addLogLine(level, message) {
+  const term = document.getElementById("terminal");
+  const line = document.createElement("div");
+  const ts   = new Date().toLocaleTimeString("en-GB", { hour12: false });
+  line.className = `log-line level-${level}`;
+  line.innerHTML =
+    `<span class="log-ts">${escHtml(ts)}</span>` +
+    `<span class="log-level">${escHtml(level)}</span>` +
+    `<span class="log-msg">${escHtml(message)}</span>`;
+  term.appendChild(line);
+  term.scrollTop = term.scrollHeight;
+}
+
+function clearLogs() {
+  document.getElementById("terminal").innerHTML =
+    '<div class="term-prompt">$ universal-scraper-ui --ready</div>';
+}
+
+// ── Status bar ─────────────────────────────────────────────────────────────
+function setStatus(state, msg) {
+  const dot = document.getElementById("status-dot");
+  dot.className = "status-dot";
+  if      (state === "running") dot.classList.add("dot-running");
+  else if (state === "done")    dot.classList.add("dot-done");
+  else if (state === "error")   dot.classList.add("dot-error");
+  else                          dot.classList.add("dot-idle");
+  document.getElementById("status-text").textContent = msg || "Ready";
+}
+
+// ── Utilities ──────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// ── Token usage ────────────────────────────────────────────────────────────
+let lastTokenUsage = null;
+
+function updateTokenUsage(usage) {
+  if (!usage) return;
+  lastTokenUsage = usage;
+
+  const bar = document.getElementById("token-bar");
+  bar.classList.add("visible");
+
+  document.getElementById("token-total").textContent = fmt(usage.total_tokens);
+  document.getElementById("token-in").textContent    = fmt(usage.total_prompt_tokens);
+  document.getElementById("token-out").textContent   = fmt(usage.total_completion_tokens);
+
+  const cacheEl = document.getElementById("token-cache");
+  if (usage.cache_hits > 0) {
+    cacheEl.style.display = "inline-block";
+    cacheEl.textContent   = `${usage.cache_hits} cache hit${usage.cache_hits > 1 ? "s" : ""}`;
+  } else {
+    cacheEl.style.display = "none";
+  }
+}
+
+function openTokenModal() {
+  if (!lastTokenUsage) return;
+  document.getElementById("token-modal-body").innerHTML = buildModalBody(lastTokenUsage);
+  document.getElementById("token-modal").classList.add("open");
+}
+
+function closeTokenModal() {
+  document.getElementById("token-modal").classList.remove("open");
+}
+
+function onModalOverlayClick(e) {
+  if (e.target === document.getElementById("token-modal")) closeTokenModal();
+}
+
+function buildModalBody(u) {
+  const statCards = [
+    { label: "Total Tokens",      value: fmt(u.total_tokens),            accent: true },
+    { label: "Prompt Tokens",     value: fmt(u.total_prompt_tokens),     accent: false },
+    { label: "Completion Tokens", value: fmt(u.total_completion_tokens), accent: false },
+    { label: "API Calls",         value: u.api_calls,                    accent: false },
+  ].map(({ label, value, accent }) =>
+    `<div class="stat-card">
+       <div class="stat-label">${label}</div>
+       <div class="stat-value${accent ? " accent" : ""}">${value}</div>
+     </div>`
+  ).join("");
+
+  const calls = (u.calls || []).map((c, i) => {
+    const cached = c.from_cache;
+    const rows = cached ? "" : [
+      ["Prompt",     fmt(c.prompt_tokens)     + " tokens"],
+      ["Completion", fmt(c.completion_tokens) + " tokens"],
+      ["Total",      fmt(c.total_tokens)      + " tokens"],
+    ].map(([k, v]) =>
+      `<div class="call-row"><span>${k}</span><span>${v}</span></div>`
+    ).join("");
+
+    return `<div class="call-card">
+      <div class="call-header">
+        <span class="call-num">Call #${i + 1}</span>
+        <span class="call-model">${escHtml(c.model)}</span>
+        <span class="call-badge ${cached ? "badge-cache" : "badge-api"}">${cached ? "Cache" : "API"}</span>
+      </div>
+      ${cached
+        ? `<div class="call-row" style="color:var(--accent)"><span>Served from local cache — no tokens used</span></div>`
+        : rows}
+    </div>`;
+  }).join("");
+
+  return `
+    <div class="stat-grid">${statCards}</div>
+    ${u.cache_hits > 0
+      ? `<p style="font-size:12px;color:var(--accent);margin-bottom:14px">
+           ✓ ${u.cache_hits} request${u.cache_hits > 1 ? "s were" : " was"} served from cache,
+           saving ~${fmt(u.cache_hits * (u.total_prompt_tokens || 500))} tokens.
+         </p>`
+      : ""}
+    <div class="section-title">Call Details</div>
+    ${calls || '<p style="color:var(--text3);font-size:13px">No calls recorded.</p>'}
+  `;
+}
+
+function fmt(n) {
+  return Number(n || 0).toLocaleString();
+}
+
+// ── Entry ──────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("url").addEventListener("keydown", e => {
+    if (e.key === "Enter") startScrape();
+  });
+  init();
+});
+</script>
+</body>
+</html>

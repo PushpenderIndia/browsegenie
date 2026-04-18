@@ -64,7 +64,7 @@ setup(
     ],
     python_requires=">=3.9",
     install_requires=[
-        "google-generativeai>=0.3.0",
+        "google-genai>=1.0.0",
         "litellm>=1.70.0",
         "beautifulsoup4>=4.11.0",
         "requests>=2.28.0",
@@ -72,6 +72,7 @@ setup(
         "lxml>=4.9.0",
         "fake-useragent>=1.2.0",
         "cloudscraper>=1.2.0",
+        "flask>=2.3.0",
     ],
     extras_require={
         "dev": [
@@ -89,6 +90,7 @@ setup(
         "console_scripts": [
             "universal-scraper=main:main",
             "universal-scraper-mcp=universal_scraper.mcp_server:main_sync",
+            "universal-scraper-ui=universal_scraper.web_ui:main",
         ],
     },
     keywords=[

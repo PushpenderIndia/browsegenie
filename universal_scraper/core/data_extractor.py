@@ -4,9 +4,15 @@ import os
 import csv
 from datetime import datetime
 from urllib.parse import urlparse
-import google.generativeai as genai
+from google import genai
 from bs4 import BeautifulSoup
 from .code_cache import CodeCache
+from .token_usage import (
+    ApiCallTokens,
+    extract_gemini_tokens,
+    extract_litellm_tokens,
+    summarise,
+)
 
 try:
     from litellm import completion
@@ -56,6 +62,7 @@ class DataExtractor:
         self._initialize_ai_provider(api_key)
 
         self.extraction_history = []
+        self._token_calls: list = []   # accumulates ApiCallTokens per API call
         self.logger.info(
             f"Initialized DataExtractor with model: {self.model_name}"
         )
@@ -66,19 +73,14 @@ class DataExtractor:
 
         # Check if it's a Gemini model
         if self.model_name.startswith("gemini"):
-            # Use Google Gemini API directly
-            if api_key:
-                genai.configure(api_key=api_key)
-            else:
-                api_key = os.getenv("GEMINI_API_KEY")
-                if not api_key:
-                    raise ValueError(
-                        "Gemini API key not provided. Set GEMINI_API_KEY "
-                        "environment variable or pass api_key parameter."
-                    )
-                genai.configure(api_key=api_key)
-
-            self.model = genai.GenerativeModel(self.model_name)
+            # Use Google Gemini API directly (google-genai SDK)
+            resolved_key = api_key or os.getenv("GEMINI_API_KEY")
+            if not resolved_key:
+                raise ValueError(
+                    "Gemini API key not provided. Set GEMINI_API_KEY "
+                    "environment variable or pass api_key parameter."
+                )
+            self.model = genai.Client(api_key=resolved_key)
             self.logger.info(
                 f"Using Google Gemini API with model: {self.model_name}"
             )
@@ -128,14 +130,25 @@ class DataExtractor:
                     messages=[{"role": "user", "content": prompt}],
                     api_key=self.api_key,
                 )
+                tokens = extract_litellm_tokens(response, self.model_name)
+                if tokens:
+                    self._token_calls.append(tokens)
                 return response.choices[0].message.content
             except Exception as e:
                 self.logger.error(f"LiteLLM API error: {str(e)}")
                 raise
         else:
-            # Use Google Gemini API
+            # Use Google Gemini API (google-genai SDK)
+            # Strip litellm provider prefix (e.g. "gemini/gemini-2.0-flash" → "gemini-2.0-flash")
             try:
-                response = self.model.generate_content(prompt)
+                model_id = self.model_name.split("/")[-1]
+                response = self.model.models.generate_content(
+                    model=model_id,
+                    contents=prompt,
+                )
+                tokens = extract_gemini_tokens(response, model_id)
+                if tokens:
+                    self._token_calls.append(tokens)
                 if response and response.text:
                     return response.text
                 else:
@@ -226,6 +239,13 @@ class DataExtractor:
                 url, html_content, extraction_fields
             )
             if cached_code:
+                self._token_calls.append(ApiCallTokens(
+                    model=self.model_name,
+                    prompt_tokens=0,
+                    completion_tokens=0,
+                    total_tokens=0,
+                    from_cache=True,
+                ))
                 return cached_code
 
         # Generate new code if not cached
@@ -567,6 +587,10 @@ HTML Content:
                 "error": str(e),
                 "extraction_code": getattr(self, "last_generated_code", None),
             }
+
+    def get_token_usage(self) -> dict:
+        """Return aggregated token usage across all API calls made so far."""
+        return summarise(self._token_calls)
 
     def get_cache_stats(self):
         """Get cache statistics if caching is enabled"""

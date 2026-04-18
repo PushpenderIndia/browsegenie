@@ -16,6 +16,7 @@
 
 ## Table of Contents
 
+- [Web UI — No-Code Mode](#web-ui--no-code-mode)
 - [How Universal Scraper Works](#how-universal-scraper-works)
 - [Live Working Example](#live-working-example)
 - [How It Works](#how-it-works)
@@ -44,7 +45,43 @@
 
 --------------------------------------------------------------------------
 
+## Web UI — No-Code Mode
+
+The fastest way to use Universal Scraper — no Python required. Install the package and launch the local web UI with one command:
+
+```bash
+pip install universal-scraper
+universal-scraper-ui
+```
+
+Your browser opens automatically at `http://127.0.0.1:5000`.
+
+![Universal Scraper Web UI](docs/local_website.png)
+
+### What you can do in the UI
+
+| Feature | Details |
+|---------|---------|
+| **Provider & Model** | Select Google Gemini, OpenAI, Anthropic, or Ollama. Models are fetched **live** from the provider's API when you enter a key — always current, never hardcoded. Falls back to 1,700+ LiteLLM models when no key is entered. Only text/chat models are listed. |
+| **API Key auto-fill** | `GEMINI_API_KEY`, `OPENAI_API_KEY`, and `ANTHROPIC_API_KEY` environment variables are pre-filled on page load. |
+| **Extraction fields** | Add fields as interactive chips (`product_name`, `price`, `rating` …). Press Enter or comma to add; click × to remove. |
+| **Output formats** | **JSON** → syntax-highlighted result. **CSV** → rendered as an HTML table in the browser; download exports a proper `.csv` file. |
+| **Real-time logs** | Live terminal-style stream (Server-Sent Events) showing every internal step — fetch, clean, AI call, cache hit — as the scrape runs. |
+| **Token usage** | After each scrape a token bar shows total tokens used, prompt/completion split, and cache-hit count. Click **Breakdown →** for a per-API-call modal. |
+
+### CLI options
+
+```bash
+universal-scraper-ui --port 8080        # custom port
+universal-scraper-ui --host 0.0.0.0    # bind to all interfaces
+universal-scraper-ui --no-browser      # skip auto-opening the browser
+```
+
+--------------------------------------------------------------------------
+
 A Python module for AI-powered web scraping with customizable field extraction using multiple AI providers (Gemini, OpenAI, Anthropic, and more via LiteLLM).
+
+Automatically Generates Scraper Code, Only If Page Structure is changed, Otherwise use the same previously generated code
 
 ## Motivation for This Module
 
@@ -54,7 +91,7 @@ A Python module for AI-powered web scraping with customizable field extraction u
 - Writing end to end web scrapers from fetching HTML to Parsing it and then exporting that data in JSON or CSV is time consuming
 - How about a module, which can write BeautifulSoup4 code on the fly by Analysing 98%+ less sized HTML structure, then use that extraction code for subsequent pages who have same HTML structure
 - A module which only regenerates the Beautifulsoup4 code, only if the HTML structure is changed
-- A module which can do couple of hours of web scraping task in just 5 seconds and still `costing less than 0.7 cents` (~$0.00786) on LLM API Calls (`for generating Extraction code only`)
+- A module which can do couple of hours of web scraping task in just 5 seconds and still `costing less than 0.7 cents` (~$0.00786) on LLM API Calls (`only for generating Scraper code`)
 
 ## How Universal Scraper Works
 
@@ -269,7 +306,7 @@ sudo pipx install "universal-scraper[mcp]" --global
 
    Or install manually:
    ```bash
-   pip install google-generativeai beautifulsoup4 requests selenium lxml fake-useragent
+   pip install google-genai beautifulsoup4 requests selenium lxml fake-useragent flask
    ```
 
 3. **Install the module**:
