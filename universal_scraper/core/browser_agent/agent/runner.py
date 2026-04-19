@@ -80,6 +80,14 @@ class BrowserAgent:
         self._queue: queue.Queue = queue.Queue()
         self._recorder = ScreenshotRecorder()
         self._active = False
+        self._cumulative_tokens: Dict[str, Any] = {
+            "total_tokens":            0,
+            "total_prompt_tokens":     0,
+            "total_completion_tokens": 0,
+            "cache_hits":              0,
+            "api_calls":               0,
+            "calls":                   [],
+        }
 
     def _emit(self, event_type: str, data: Any) -> None:
         self._queue.put_nowait({"type": event_type, "data": data})
@@ -111,7 +119,31 @@ class BrowserAgent:
         }
         if self._api_key:
             kwargs["api_key"] = self._api_key
-        return litellm.completion(**kwargs)
+        response = litellm.completion(**kwargs)
+        self._accumulate_tokens(response)
+        return response
+
+    def _accumulate_tokens(self, response: Any) -> None:
+        usage = getattr(response, "usage", None)
+        if not usage:
+            return
+        prompt     = int(getattr(usage, "prompt_tokens",     0) or 0)
+        completion = int(getattr(usage, "completion_tokens", 0) or 0)
+        total      = int(getattr(usage, "total_tokens",      0) or 0)
+
+        ct = self._cumulative_tokens
+        ct["total_prompt_tokens"]     += prompt
+        ct["total_completion_tokens"] += completion
+        ct["total_tokens"]            += total
+        ct["api_calls"]               += 1
+        ct["calls"].append({
+            "model":             self._model,
+            "prompt_tokens":     prompt,
+            "completion_tokens": completion,
+            "total_tokens":      total,
+            "from_cache":        False,
+        })
+        self._emit("tokens", dict(ct))
 
     def run(self) -> None:
         self._active = True

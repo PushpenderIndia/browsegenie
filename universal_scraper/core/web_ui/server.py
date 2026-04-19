@@ -25,6 +25,7 @@ from pathlib import Path
 
 from flask import Flask, Response, jsonify, render_template, request, stream_with_context
 
+from ... import __version__
 from .jobs import Job, jobs, run_job, run_multi_url_job
 from .providers import PROVIDERS, get_models
 
@@ -46,7 +47,7 @@ def create_app() -> Flask:
 
     @app.route("/")
     def index():
-        return render_template("index.html")
+        return render_template("index.html", version=__version__)
 
     # ------------------------------------------------------------------
     # Providers

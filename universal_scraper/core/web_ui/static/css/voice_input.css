@@ -1,0 +1,68 @@
+/* voice_input.css — mic button and toast for VoiceInput module */
+
+/* ── Mic button ──────────────────────────────────────────────────────────── */
+
+.vi-btn {
+  display:         inline-flex;
+  align-items:     center;
+  justify-content: center;
+  width:           30px;
+  height:          30px;
+  flex-shrink:     0;
+  border:          1px solid var(--border2);
+  border-radius:   6px;
+  background:      var(--surface);
+  color:           var(--text2);
+  cursor:          pointer;
+  transition:      color .15s, background .15s, border-color .15s, box-shadow .15s;
+}
+
+.vi-btn:hover:not(:disabled) {
+  color:       var(--text);
+  background:  var(--border2);
+}
+
+/* Recording state — pulsing red ring */
+.vi-btn--recording {
+  color:        var(--red);
+  border-color: rgba(239, 68, 68, .45);
+  background:   rgba(239, 68, 68, .08);
+  animation:    vi-pulse 1.4s ease-in-out infinite;
+}
+
+/* Unsupported / disabled */
+.vi-btn--unsupported {
+  opacity: .35;
+  cursor:  not-allowed;
+}
+
+/* ── Pulse keyframe ──────────────────────────────────────────────────────── */
+
+@keyframes vi-pulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, .55); }
+  50%      { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);   }
+}
+
+/* ── Error toast ─────────────────────────────────────────────────────────── */
+
+.vi-toast {
+  position:     absolute;
+  bottom:       calc(100% + 6px);
+  left:         50%;
+  transform:    translateX(-50%);
+  white-space:  nowrap;
+  font-size:    11px;
+  color:        var(--red);
+  background:   var(--surface2);
+  border:       1px solid rgba(239, 68, 68, .3);
+  border-radius: 5px;
+  padding:      4px 9px;
+  pointer-events: none;
+  animation:    fadeIn .15s ease;
+  z-index:      100;
+}
+
+/* Container needs position:relative for the toast */
+#ba-voice-container {
+  position: relative;
+}

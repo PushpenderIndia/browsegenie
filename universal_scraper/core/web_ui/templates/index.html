@@ -14,6 +14,7 @@
 <link rel="stylesheet" href="/static/css/tokens.css"/>
 <link rel="stylesheet" href="/static/css/agent.css"/>
 <link rel="stylesheet" href="/static/css/browser_agent.css"/>
+<link rel="stylesheet" href="/static/css/voice_input.css"/>
 </head>
 <body>
 <div class="app">
@@ -31,7 +32,7 @@
           <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
         </svg>
         Universal Scraper
-        <span class="badge">v1.9.4</span>
+        <span class="badge">v{{ version }}</span>
       </div>
       <div class="header-right">
         <div class="header-links">
@@ -207,6 +208,7 @@
           <input type="checkbox" id="ba-headless" checked/>
           Headless mode
         </label>
+        <div id="ba-voice-container"></div>
         <div style="flex:1"></div>
         <button class="btn btn-ghost btn-sm" id="ba-stop-btn" onclick="baStop()" disabled>Stop</button>
         <button class="btn btn-primary" id="ba-start-btn" onclick="baStart()">
@@ -221,6 +223,17 @@
     <div class="ba-status-bar">
       <span class="status-dot dot-idle" id="ba-status-dot"></span>
       <span id="ba-status-text">Ready — uses Provider / Model / API Key from the Scraper tab</span>
+    </div>
+
+    <div class="token-bar" id="ba-token-bar">
+      <span class="token-icon">⚡</span>
+      <span class="token-total" id="ba-token-total">0</span>
+      <span style="color:var(--text2)">tokens</span>
+      <span class="token-split">
+        (<span class="in" id="ba-token-in">0</span> prompt&nbsp;/&nbsp;<span class="out" id="ba-token-out">0</span> completion)
+      </span>
+      <span class="token-cache" id="ba-token-cache" style="display:none"></span>
+      <button class="btn btn-ghost" onclick="openTokenModal('ba-')">Breakdown →</button>
     </div>
 
     <div class="ba-layout">
@@ -370,6 +383,7 @@
 <script src="/static/js/scrape.js"></script>
 <script src="/static/js/agent.js"></script>
 <script src="/static/js/browser_agent.js"></script>
+<script src="/static/js/voice_input.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

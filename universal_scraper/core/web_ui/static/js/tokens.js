@@ -1,26 +1,39 @@
 // ── Token usage bar + modal ────────────────────────────────────────────────
+//
+// `prefix` is an optional ID prefix string (e.g. "ba-") that selects which
+// bar to update. Pass no argument (or "") to target the Scraper tab bar.
 
-function updateTokenUsage(usage) {
+function updateTokenUsage(usage, prefix) {
   if (!usage) return;
-  lastTokenUsage = usage;
+  const p = prefix || "";
 
-  document.getElementById("token-bar").classList.add("visible");
-  document.getElementById("token-total").textContent = fmt(usage.total_tokens);
-  document.getElementById("token-in").textContent    = fmt(usage.total_prompt_tokens);
-  document.getElementById("token-out").textContent   = fmt(usage.total_completion_tokens);
+  if (p === "ba-") lastBaTokenUsage = usage;
+  else             lastTokenUsage   = usage;
 
-  const cacheEl = document.getElementById("token-cache");
+  const bar   = document.getElementById(p + "token-bar");
+  const total = document.getElementById(p + "token-total");
+  const inp   = document.getElementById(p + "token-in");
+  const out   = document.getElementById(p + "token-out");
+  const cache = document.getElementById(p + "token-cache");
+  if (!bar) return;
+
+  bar.classList.add("visible");
+  total.textContent = fmt(usage.total_tokens);
+  inp.textContent   = fmt(usage.total_prompt_tokens);
+  out.textContent   = fmt(usage.total_completion_tokens);
+
   if (usage.cache_hits > 0) {
-    cacheEl.style.display = "inline-block";
-    cacheEl.textContent   = `${usage.cache_hits} cache hit${usage.cache_hits > 1 ? "s" : ""}`;
+    cache.style.display = "inline-block";
+    cache.textContent   = `${usage.cache_hits} cache hit${usage.cache_hits > 1 ? "s" : ""}`;
   } else {
-    cacheEl.style.display = "none";
+    cache.style.display = "none";
   }
 }
 
-function openTokenModal() {
-  if (!lastTokenUsage) return;
-  document.getElementById("token-modal-body").innerHTML = _buildModalBody(lastTokenUsage);
+function openTokenModal(prefix) {
+  const usage = (prefix === "ba-") ? lastBaTokenUsage : lastTokenUsage;
+  if (!usage) return;
+  document.getElementById("token-modal-body").innerHTML = _buildModalBody(usage);
   document.getElementById("token-modal").classList.add("open");
 }
 

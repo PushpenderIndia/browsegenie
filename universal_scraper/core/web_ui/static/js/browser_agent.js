@@ -125,6 +125,10 @@ function _baHandleEvent(event) {
       break;
     }
 
+    case "tokens":
+      updateTokenUsage(event.data, "ba-");
+      break;
+
     case "screenshot":
       _baPushFrame(event.data);
       break;
@@ -335,6 +339,10 @@ function _baClearAll() {
   img.style.display = "none";
   document.getElementById("ba-preview-empty").style.display = "";
   document.getElementById("ba-page-url").textContent = "";
+
+  lastBaTokenUsage = null;
+  const baTokenBar = document.getElementById("ba-token-bar");
+  if (baTokenBar) baTokenBar.classList.remove("visible");
 
   document.getElementById("ba-playback-wrap").style.display = "none";
   const slider = document.getElementById("ba-timeline");

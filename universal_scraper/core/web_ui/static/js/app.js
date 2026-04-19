@@ -13,6 +13,7 @@ async function init() {
   }
 
   initSidebar();
+  VoiceInput.attach('ba-task', document.getElementById('ba-voice-container'));
 }
 
 document.addEventListener("DOMContentLoaded", init);
