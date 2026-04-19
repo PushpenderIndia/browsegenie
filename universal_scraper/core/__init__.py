@@ -12,5 +12,6 @@ from .html_fetcher import HtmlFetcher
 from .html_cleaner import HtmlCleaner
 from .data_extractor import DataExtractor
 from .code_cache import CodeCache
+from .tech_stack_detector import TechStackDetector
 
-__all__ = ["HtmlFetcher", "HtmlCleaner", "DataExtractor", "CodeCache"]
+__all__ = ["HtmlFetcher", "HtmlCleaner", "DataExtractor", "CodeCache", "TechStackDetector"]

@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, WebDriverException
+from .tech_stack_detector import TechStackDetector
 
 
 class HtmlFetcher:
@@ -18,6 +19,7 @@ class HtmlFetcher:
         self.temp_dir = temp_dir
         self.raw_html_dir = os.path.join(temp_dir, "raw_html")
         os.makedirs(self.raw_html_dir, exist_ok=True)
+        self.detector = TechStackDetector()
 
         self.headers = {
             "User-Agent": (
@@ -140,24 +142,38 @@ class HtmlFetcher:
 
     def fetch_html(self, url, save_temp=True):
         """
-        Try to fetch HTML using both methods, return the first successful
-        result
+        Fetch HTML for a URL, choosing the right strategy automatically.
+
+        - Static pages: CloudScraper (fast, no browser overhead)
+        - SPAs (React/Vue/Angular/Next.js/…): skip directly to Selenium so
+          JavaScript has a chance to render the actual content.
+        - CloudScraper failures: fall back to Selenium regardless.
         """
         self.logger.info(f"Starting to fetch HTML for: {url}")
 
-        # Method 1: Try cloudscraper first (faster)
+        # Step 1: Fetch with cloudscraper to get the raw HTML shell
         html = self.fetch_with_cloudscraper(url)
-        if html and len(html) > 100:  # Basic validation
-            self.logger.info("Successfully fetched HTML with cloudscraper")
-            if save_temp:
-                self._save_raw_html(url, html, "cloudscraper")
-            return html
 
-        # Method 2: Fallback to selenium
-        self.logger.info(
-            "Cloudscraper failed or returned insufficient content, "
-            "trying selenium..."
-        )
+        if html and len(html) > 100:
+            # Step 2: Detect whether the page needs JS rendering
+            detection = self.detector.detect(html)
+            if detection["is_spa"]:
+                self.logger.info(
+                    f"SPA detected ({detection['framework']}): "
+                    f"{detection['reason']} — switching to selenium"
+                )
+            else:
+                self.logger.info("Successfully fetched HTML with cloudscraper")
+                if save_temp:
+                    self._save_raw_html(url, html, "cloudscraper")
+                return html
+        else:
+            self.logger.info(
+                "Cloudscraper failed or returned insufficient content, "
+                "trying selenium..."
+            )
+
+        # Step 3: Use Selenium (SPA or cloudscraper failure)
         html = self.fetch_with_selenium(url)
         if html and len(html) > 100:
             self.logger.info("Successfully fetched HTML with selenium")
