@@ -61,7 +61,11 @@ universal-scraper-ui
 
 Your browser opens automatically at `http://127.0.0.1:7860`.
 
-![Universal Scraper Web UI](docs/local_website.png)
+![Universal Scraper Web UI - Scraper Agent](docs/Scraper_Agent.png)
+
+**Browser Agent Mode** - Do any kind of Browser Automation using Prompt!
+
+![Universal Scraper Web UI - Browser Agent](docs/Browser_Agent.png)
 
 ### What you can do in the UI
 
@@ -73,6 +77,10 @@ Your browser opens automatically at `http://127.0.0.1:7860`.
 | **Output formats** | **JSON** → syntax-highlighted result. **CSV** → rendered as an HTML table in the browser; download exports a proper `.csv` file. |
 | **Real-time logs** | Live terminal-style stream (Server-Sent Events) showing every internal step - fetch, clean, AI call, cache hit - as the scrape runs. |
 | **Token usage** | After each scrape a token bar shows total tokens used, prompt/completion split, and cache-hit count. Click **Breakdown →** for a per-API-call modal. |
+| **Browser Agent** | Switch to the Browser Agent tab and describe any task in plain English. The agent opens a real Chromium browser, navigates, clicks, and extracts data step-by-step. |
+| **Voice input** | Click the mic button in the Browser Agent tab to dictate your task. Live interim transcription appears as you speak; click again to stop. Uses the browser's built-in Web Speech API — no external service required. |
+| **Browser Agent token bar** | A live token bar in the Browser Agent tab updates after every LLM call, showing cumulative prompt/completion tokens across all steps. Click **Breakdown →** for a per-call modal. |
+| **Screenshot playback** | After a browser agent task completes, a timeline scrubber lets you replay every step frame-by-frame with tool name and step labels. |
 
 ### CLI options
 
