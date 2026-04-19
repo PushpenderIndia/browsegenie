@@ -230,4 +230,95 @@ def create_app() -> Flask:
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
 
+    # ------------------------------------------------------------------
+    # Browser Agent: start session
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/start", methods=["POST"])
+    def api_browser_agent_start():
+        body     = request.get_json(force=True) or {}
+        task     = (body.get("task") or "").strip()
+        provider = body.get("provider", "google")
+        model    = body.get("model", "")
+        api_key  = (body.get("api_key") or "").strip()
+        headless = body.get("headless", True)
+
+        if not task:
+            return jsonify({"error": "task is required"}), 400
+        if not model:
+            return jsonify({"error": "model is required"}), 400
+
+        if not api_key:
+            env_var = PROVIDERS.get(provider, {}).get("env_var")
+            if env_var:
+                api_key = os.getenv(env_var, "")
+
+        from universal_scraper.core.browser_agent.agent.sessions import create_session
+        session = create_session(
+            task=task,
+            model=model,
+            provider=provider,
+            api_key=api_key,
+            headless=headless,
+        )
+        return jsonify({"session_id": session.session_id})
+
+    # ------------------------------------------------------------------
+    # Browser Agent: event stream (SSE)
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/stream/<session_id>")
+    def api_browser_agent_stream(session_id: str):
+        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        session = get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found"}), 404
+
+        def _generate():
+            while True:
+                try:
+                    event = session.event_queue.get(timeout=25)
+                except queue.Empty:
+                    yield 'data: {"type":"keepalive"}\n\n'
+                    if session.is_done:
+                        break
+                    continue
+
+                yield f"data: {json.dumps(event)}\n\n"
+
+                if event.get("type") in ("done", "error"):
+                    break
+
+        return Response(
+            stream_with_context(_generate()),
+            mimetype="text/event-stream",
+            headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+        )
+
+    # ------------------------------------------------------------------
+    # Browser Agent: stop session
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/stop/<session_id>", methods=["POST"])
+    def api_browser_agent_stop(session_id: str):
+        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        session = get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found"}), 404
+        session.stop()
+        return jsonify({"status": "stopped"})
+
+    # ------------------------------------------------------------------
+    # Browser Agent: playback frames
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/playback/<session_id>")
+    def api_browser_agent_playback(session_id: str):
+        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        session = get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found"}), 404
+        frames = session.get_playback_frames()
+        return jsonify({"frames": frames, "total": len(frames)})
+
     return app

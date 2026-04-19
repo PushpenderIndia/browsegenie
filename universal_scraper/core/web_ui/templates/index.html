@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="/static/css/panels.css"/>
 <link rel="stylesheet" href="/static/css/tokens.css"/>
 <link rel="stylesheet" href="/static/css/agent.css"/>
+<link rel="stylesheet" href="/static/css/browser_agent.css"/>
 </head>
 <body>
 <div class="app">
@@ -37,6 +38,15 @@
           <a href="https://github.com/pushpenderindia/universal-scraper" target="_blank">GitHub</a>
           <a href="https://github.com/pushpenderindia/universal-scraper/wiki" target="_blank">Docs</a>
         </div>
+        <div class="main-tabs">
+          <button class="main-tab active" id="main-tab-scraper" onclick="switchMainTab('scraper')">Scraper</button>
+          <button class="main-tab" id="main-tab-browser-agent" onclick="switchMainTab('browser-agent')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+            </svg>
+            Browser Agent
+          </button>
+        </div>
         <button class="btn-sidebar-toggle" id="sidebar-toggle-btn" onclick="toggleSidebar()">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -45,6 +55,9 @@
         </button>
       </div>
     </header>
+
+  <!-- ── Scraper tab ────────────────────────────────────────────── -->
+  <div id="tab-scraper">
 
     <!-- Multi-URL input -->
     <div class="url-section">
@@ -76,7 +89,7 @@
         <div class="field-group">
           <label class="fg-label">Model</label>
           <div class="model-wrap">
-            <select id="model"></select>
+            <select id="model" onchange="onModelChange()"></select>
             <div class="model-status" id="model-spinner" style="display:none">
               <div class="spinner spinner-sm"></div>
             </div>
@@ -178,6 +191,106 @@
       <a href="https://github.com/pushpenderindia/universal-scraper" target="_blank">GitHub</a>
     </footer>
 
+  </div><!-- /#tab-scraper -->
+
+
+  <!-- ── Browser Agent tab ───────────────────────────────────── -->
+  <div id="tab-browser-agent" style="display:none">
+
+    <div class="ba-task-section">
+      <div class="ba-task-wrap">
+        <textarea id="ba-task" rows="3"
+          placeholder="Describe what you want the browser agent to do…&#10;&#10;Example: Go to google.com, search for 'Python tutorials', and list the top 5 results with their titles and URLs."></textarea>
+      </div>
+      <div class="ba-task-footer">
+        <label class="ba-headless-label">
+          <input type="checkbox" id="ba-headless" checked/>
+          Headless mode
+        </label>
+        <div style="flex:1"></div>
+        <button class="btn btn-ghost btn-sm" id="ba-stop-btn" onclick="baStop()" disabled>Stop</button>
+        <button class="btn btn-primary" id="ba-start-btn" onclick="baStart()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Run Agent
+        </button>
+      </div>
+    </div>
+
+    <div class="ba-status-bar">
+      <span class="status-dot dot-idle" id="ba-status-dot"></span>
+      <span id="ba-status-text">Ready — uses Provider / Model / API Key from the Scraper tab</span>
+    </div>
+
+    <div class="ba-layout">
+
+      <!-- Activity log -->
+      <div class="ba-log-panel panel">
+        <div class="panel-header">
+          <span class="panel-title">Agent Activity</span>
+          <div class="panel-actions">
+            <button class="btn btn-ghost btn-sm" onclick="baClearLog()">Clear</button>
+          </div>
+        </div>
+        <div class="ba-log-body" id="ba-log-body">
+          <div class="ba-empty-log">Start a task to see agent activity here.</div>
+        </div>
+      </div>
+
+      <!-- Browser preview -->
+      <div class="ba-preview-panel panel">
+        <div class="panel-header">
+          <span class="panel-title">Browser Preview</span>
+          <span class="ba-page-url" id="ba-page-url"></span>
+        </div>
+        <div class="ba-preview-body" id="ba-preview-body">
+          <div class="ba-preview-empty" id="ba-preview-empty">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path d="M8 21h8M12 17v4"/>
+            </svg>
+            <span>Browser preview will appear here</span>
+          </div>
+          <img id="ba-screenshot" src="" alt="Browser screenshot" style="display:none; width:100%; height:100%; object-fit:contain;"/>
+        </div>
+
+        <!-- Playback controls (revealed after task done) -->
+        <div class="ba-playback-wrap" id="ba-playback-wrap" style="display:none">
+          <input type="range" class="ba-timeline" id="ba-timeline" min="0" max="0" value="0"
+                 oninput="baSeekFrame(this.value)"/>
+          <div class="ba-playback-row">
+            <div class="ba-playback-btns">
+              <button class="ba-pb-btn" onclick="baFirstFrame()" title="First frame">⏮</button>
+              <button class="ba-pb-btn" onclick="baPrevFrame()"  title="Previous frame">⏴</button>
+              <button class="ba-pb-btn ba-pb-play" id="ba-play-btn" onclick="baPlayPause()" title="Play / Pause">▶</button>
+              <button class="ba-pb-btn" onclick="baNextFrame()"  title="Next frame">⏵</button>
+              <button class="ba-pb-btn" onclick="baLastFrame()"  title="Last frame">⏭</button>
+            </div>
+            <span class="ba-frame-counter" id="ba-frame-counter">0 / 0</span>
+            <span class="ba-frame-label"   id="ba-frame-label"></span>
+          </div>
+        </div>
+
+        <div class="ba-result-section" id="ba-result-section" style="display:none">
+          <div class="ba-result-title">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            Task Result
+          </div>
+          <div class="ba-result-body" id="ba-result-body"></div>
+        </div>
+      </div>
+
+    </div><!-- /.ba-layout -->
+
+    <footer>
+      Universal Scraper &nbsp;·&nbsp; Browser Agent &nbsp;·&nbsp;
+      <a href="https://github.com/pushpenderindia/universal-scraper" target="_blank">GitHub</a>
+    </footer>
+
+  </div><!-- /#tab-browser-agent -->
+
+
   </div><!-- /.main-col -->
 
 
@@ -256,6 +369,7 @@
 <script src="/static/js/tokens.js"></script>
 <script src="/static/js/scrape.js"></script>
 <script src="/static/js/agent.js"></script>
+<script src="/static/js/browser_agent.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
 </html>

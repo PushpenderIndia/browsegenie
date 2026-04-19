@@ -23,3 +23,6 @@ python-dateutil>=2.8.0
 # Web UI
 flask>=2.3.0
 
+# Browser Agent
+playwright>=1.40.0
+

@@ -10,7 +10,8 @@ Test this module against multiple different sites, and for those sites where the
 
 - [ ] ⁠Retry Mechanism to re-generate the bs4 code till it is able to generate correct extraction code (beautifulsoup4 code)
 - [ ] Captcha Resolve using Third Party api
-- [ ] Decision making algo to switch to selenium for JS heavy sites for fetching HTML
+- [ ] Proxy Rotation
+- [ ] Parallel Browser Agents & Scraper Agents
 
 ## Extra Features
 
@@ -24,4 +25,3 @@ e.g.
 
 result = scraper.scrape_url("https://example.com/jobs?page=DYNAMIC", min_limit=1, max_limit=100)
 ```
-- [ ] Multi Agent System by which it can Plan & Execute any kind of Browser Automation by integrating it with ADK (Agent Development Kit)

@@ -1,6 +1,8 @@
 // ── Provider + model dropdown management ─────────────────────────────────
 
-const _LS_KEY = provider => `universal-scraper-${provider}`;
+const _LS_KEY          = provider => `universal-scraper-${provider}`;
+const _LS_PROVIDER_KEY = "universal-scraper-provider";
+const _LS_MODEL_KEY    = provider => `universal-scraper-model-${provider}`;
 
 // ── localStorage helpers ──────────────────────────────────────────────────
 
@@ -17,18 +19,21 @@ function _loadKey(provider) {
 // ── Provider select ───────────────────────────────────────────────────────
 
 function buildProviderSelect() {
-  const sel = document.getElementById("provider");
-  sel.innerHTML = "";
+  const sel      = document.getElementById("provider");
+  const savedKey = localStorage.getItem(_LS_PROVIDER_KEY);
+  sel.innerHTML  = "";
   for (const [key, cfg] of Object.entries(providers)) {
     const opt = document.createElement("option");
     opt.value = key;
     opt.textContent = cfg.name;
     sel.appendChild(opt);
   }
+  if (savedKey && providers[savedKey]) sel.value = savedKey;
 }
 
 async function onProviderChange() {
   const key = document.getElementById("provider").value;
+  localStorage.setItem(_LS_PROVIDER_KEY, key);
   const cfg = providers[key];
   if (!cfg) return;
 
@@ -95,9 +100,9 @@ async function refreshModels() {
     const params = new URLSearchParams({ provider });
     if (apiKey) params.set("api_key", apiKey);
 
-    const data   = await fetch("/api/models?" + params).then(r => r.json());
-    const models = data.models || [];
-    const prev   = modelSel.value;
+    const data        = await fetch("/api/models?" + params).then(r => r.json());
+    const models      = data.models || [];
+    const savedModel  = localStorage.getItem(_LS_MODEL_KEY(provider));
 
     modelSel.innerHTML = "";
     if (!models.length) {
@@ -110,7 +115,7 @@ async function refreshModels() {
         opt.value = opt.textContent = m;
         modelSel.appendChild(opt);
       });
-      if (prev && models.includes(prev)) modelSel.value = prev;
+      if (savedModel && models.includes(savedModel)) modelSel.value = savedModel;
     }
   } catch (e) {
     addLogLine("ERROR", "Failed to load models: " + e);
@@ -118,6 +123,12 @@ async function refreshModels() {
     spinner.style.display = "none";
     modelSel.disabled = false;
   }
+}
+
+function onModelChange() {
+  const provider = document.getElementById("provider").value;
+  const model    = document.getElementById("model").value;
+  if (model) localStorage.setItem(_LS_MODEL_KEY(provider), model);
 }
 
 function toggleKey() {

@@ -59,7 +59,7 @@ pip install universal-scraper
 universal-scraper-ui
 ```
 
-Your browser opens automatically at `http://127.0.0.1:5000`.
+Your browser opens automatically at `http://127.0.0.1:7860`.
 
 ![Universal Scraper Web UI](docs/local_website.png)
 
