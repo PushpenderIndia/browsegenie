@@ -863,7 +863,3 @@ flake8 webagent/ --count --exit-zero --max-complexity=10 --max-line-length=127 -
 ## License
 
 GPT 3.0 License - see LICENSE file for details.
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
