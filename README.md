@@ -32,6 +32,7 @@ When the page layout changes the agent detects it automatically and regenerates 
   - [1. Set up your API key](#1-set-up-your-api-key)
   - [2. Basic Usage](#2-basic-usage)
   - [3. Convenience Function](#3-convenience-function)
+  - [4. Browser Agent - browse()](#4-browser-agent---browse)
 - [Export Formats](#export-formats)
 - [CLI Usage](#cli-usage)
 - [MCP Server Usage](#mcp-server-usage)
@@ -192,7 +193,7 @@ from universal_scraper import UniversalScraper
 scraper = UniversalScraper(api_key="your_gemini_api_key")
 
 # Option 2: Specify Gemini model explicitly
-scraper = UniversalScraper(api_key="your_gemini_api_key", model_name="gemini-2.5-flash")
+scraper = UniversalScraper(api_key="your_gemini_api_key", model_name="gemini-3.1-flash-lite-preview")
 
 # Option 3: Use OpenAI
 scraper = UniversalScraper(api_key="your_openai_api_key", model_name="gpt-4")
@@ -266,6 +267,112 @@ data = scrape(
 
 print(data['data'])  # The extracted data
 ```
+
+### 4. Browser Agent - `browse()`
+
+Run any browser automation task from code — the same capability available in the web UI, as a single function call.
+
+```python
+from universal_scraper import browse
+
+result = browse(
+    task="Go to news.ycombinator.com and return the top 5 story titles",
+    api_key="your_gemini_api_key",
+    model_name="gemini-3.1-flash-lite-preview",
+)
+
+print(result["summary"])   # Agent's summary of what it did
+print(result["data"])      # Structured data extracted by the agent
+print(result["steps"])     # Number of steps taken
+print(result["success"])   # True if completed successfully
+```
+
+Logs are printed automatically so you can follow along in real time:
+
+![Universal Scraper - Browser Agent](docs/Run_Browser_Agent_From_Code.png)
+
+**With OpenAI or Anthropic** — provider is auto-detected from the model name:
+
+```python
+# OpenAI
+result = browse(
+    task="Search PyPI for 'httpx' and return the latest version number",
+    api_key="your_openai_api_key",
+    model_name="gpt-4o",
+)
+
+# Anthropic Claude
+result = browse(
+    task="Go to example.com and return the page heading",
+    api_key="your_anthropic_api_key",
+    model_name="claude-3-5-sonnet-20241022",
+)
+```
+
+**Silent mode** — suppress all logs:
+
+```python
+result = browse(
+    task="...",
+    api_key="your_api_key",
+    model_name="gemini-3.1-flash-lite-preview",
+    show_logs=False,
+)
+```
+
+**Stream events** — receive real-time events via callback:
+
+```python
+def on_event(event_type, data):
+    if event_type == "screenshot":
+        # data["image"] is a base64 JPEG
+        save_screenshot(data["image"])
+    elif event_type == "tool_call":
+        print(f"Agent called: {data['tool']}")
+
+result = browse(
+    task="Go to github.com/trending and extract the top 3 repos",
+    api_key="your_gemini_api_key",
+    model_name="gemini-3.1-flash-lite-preview",
+    on_event=on_event,
+)
+```
+
+**Visible browser + timeout:**
+
+```python
+result = browse(
+    task="Log in to example.com with user@test.com / pass123 and click Submit",
+    api_key="your_gemini_api_key",
+    model_name="gemini-3.1-flash-lite-preview",
+    headless=False,   # Watch the browser in action
+    timeout=120,      # Stop after 2 minutes
+)
+```
+
+**Return value:**
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `summary` | `str` | Text summary the agent produced when done |
+| `data` | `dict` | Structured data extracted by the agent |
+| `screenshots` | `list` | All screenshot frames captured during the run |
+| `steps` | `int` | Number of steps the agent took |
+| `success` | `bool` | `True` if task completed, `False` on error/timeout |
+| `error` | `str\|None` | Error message if `success` is `False` |
+
+**Parameters:**
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `task` | `str` | required | Plain-English description of what to do |
+| `api_key` | `str` | required | AI provider API key |
+| `model_name` | `str` | required | Model name — provider auto-detected |
+| `provider` | `str` | auto | Override provider (`google`, `openai`, `anthropic`, …) |
+| `headless` | `bool` | `True` | Run browser headlessly |
+| `on_event` | `callable` | `None` | Callback for real-time events |
+| `timeout` | `float` | `None` | Max seconds before stopping |
+| `show_logs` | `bool` | `True` | Print progress logs to stdout |
 
 ## Export Formats
 
@@ -532,7 +639,7 @@ UniversalScraper(api_key=None, temp_dir="temp", output_dir="output", log_level=l
 - `temp_dir`: Directory for temporary files
 - `output_dir`: Directory for output files
 - `log_level`: Logging level
-- `model_name`: AI model name (default: 'gemini-2.5-flash', supports 100+ models via LiteLLM)
+- `model_name`: AI model name (default: 'gemini-3.1-flash-lite-preview', supports 100+ models via LiteLLM)
   - See [LiteLLM Providers](https://docs.litellm.ai/docs/providers) for complete model list and setup
 
 #### Methods
@@ -544,13 +651,30 @@ UniversalScraper(api_key=None, temp_dir="temp", output_dir="output", log_level=l
 - `scrape_url(url: str, save_to_file=False, output_filename=None, format='json') -> Dict`: Scrape a single URL
 - `scrape_multiple_urls(urls: List[str], save_to_files=True, format='json') -> List[Dict]`: Scrape multiple URLs
 
-### Convenience Function
+### Convenience Functions
 
+#### `scrape()`
 ```python
 scrape(url: str, api_key: str, fields: List[str], model_name: Optional[str] = None, format: str = 'json') -> Dict
 ```
 
 Quick scraping function for simple use cases. Auto-detects AI provider from API key pattern.
+
+#### `browse()`
+```python
+browse(
+    task: str,
+    api_key: str,
+    model_name: str,
+    provider: Optional[str] = None,
+    headless: bool = True,
+    on_event: Optional[Callable] = None,
+    timeout: Optional[float] = None,
+    show_logs: bool = True,
+) -> Dict
+```
+
+Run a browser automation task. The agent opens a real Chromium browser, navigates, clicks, scrolls, and extracts data based on the plain-English `task` description. Provider is auto-detected from `model_name`. Returns a dict with `summary`, `data`, `screenshots`, `steps`, `success`, and `error`.
 
 **Note**: For model names and provider-specific setup, refer to the [LiteLLM Providers Documentation](https://docs.litellm.ai/docs/providers).
 
@@ -624,7 +748,7 @@ scraper.set_fields([
 Universal Scraper now supports multiple AI providers through LiteLLM integration:
 
 ### Supported Providers
-- **Google Gemini** (Default): `gemini-2.5-flash`, `gemini-1.5-pro`, etc.
+- **Google Gemini** (Default): `gemini-3.1-flash-lite-preview`, `gemini-1.5-pro`, etc.
 - **OpenAI**: `gpt-4`, `gpt-4-turbo`, `gpt-3.5-turbo`, etc.
 - **Anthropic**: `claude-3-opus-20240229`, `claude-3-sonnet-20240229`, `claude-3-haiku-20240307`
 - **100+ Other Models**: Via LiteLLM including Llama, PaLM, Cohere, and more
@@ -636,7 +760,7 @@ Universal Scraper now supports multiple AI providers through LiteLLM integration
 ```python
 # Gemini (Default - Free tier available)
 scraper = UniversalScraper(api_key="your_gemini_key")
-# Auto-detects as gemini-2.5-flash
+# Auto-detects as gemini-3.1-flash-lite-preview
 
 # OpenAI
 scraper = UniversalScraper(api_key="sk-...", model_name="gpt-4")
@@ -657,7 +781,7 @@ scraper = UniversalScraper(api_key="your_api_key", model_name="llama-2-70b-chat"
 **Quick Reference for Popular Models:**
 ```python
 # Gemini Models
-model_name="gemini-2.5-flash"        # Fast, efficient
+model_name="gemini-3.1-flash-lite-preview"        # Fast, efficient
 model_name="gemini-1.5-pro"          # More capable
 
 # OpenAI Models  

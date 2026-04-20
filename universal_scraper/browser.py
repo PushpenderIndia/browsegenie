@@ -12,7 +12,7 @@ from .core.browser_agent.agent.sessions import create_session
 def browse(
     task: str,
     api_key: str,
-    model_name: Optional[str] = None,
+    model_name: str,
     provider: Optional[str] = None,
     headless: bool = True,
     on_event: Optional[Callable[[str, Dict], None]] = None,
@@ -25,9 +25,8 @@ def browse(
     Args:
         task: Natural language description of what to do in the browser
         api_key: AI provider API key (Gemini, OpenAI, Anthropic, etc.)
-        model_name: AI model name. Defaults to 'gemini-2.5-flash'.
-                    Examples: 'gpt-4o', 'claude-3-5-sonnet-20241022',
-                    'gemini-2.5-flash'
+        model_name: AI model name. Examples: 'gemini-2.5-flash', 'gpt-4o',
+                    'claude-3-5-sonnet-20241022'
         provider: Provider name - 'google', 'openai', 'anthropic', 'ollama',
                   'deepseek', 'mistral', 'xai', 'cohere'.
                   Auto-detected from model_name if not specified.
@@ -218,13 +217,10 @@ def _log_event(event_type: str, data: Dict) -> None:
 
 
 def _resolve_model_and_provider(
-    model_name: Optional[str],
+    model_name: str,
     provider: Optional[str],
 ) -> Tuple[str, str]:
     """Return (model, provider), auto-detecting provider from model name."""
-    if model_name is None:
-        model_name = "gemini-2.5-flash"
-
     if provider:
         return model_name, provider
 
