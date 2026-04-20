@@ -1,6 +1,25 @@
 import base64
+import subprocess
+import sys
 import threading
 from playwright.sync_api import sync_playwright, Browser, Page, BrowserContext, Playwright
+
+
+def _ensure_playwright_browsers():
+    """Auto-install Chromium if not already installed."""
+    try:
+        from playwright.sync_api import sync_playwright
+        with sync_playwright() as p:
+            p.chromium.launch(headless=True).close()
+    except Exception:
+        print("BrowseGenie: Installing Chromium browser (one-time setup)...")
+        subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            check=True
+        )
+
+
+_ensure_playwright_browsers()
 
 
 class BrowserSession:

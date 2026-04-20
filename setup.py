@@ -72,6 +72,7 @@ setup(
         "fake-useragent>=1.2.0",
         "cloudscraper>=1.2.0",
         "flask>=2.3.0",
+        "playwright>=1.40.0",
     ],
     extras_require={
         "dev": [
