@@ -2,7 +2,7 @@
 
 import tempfile
 from unittest.mock import Mock, patch
-from universal_scraper.core.html_fetcher import HtmlFetcher
+from webagent.core.html_fetcher import HtmlFetcher
 
 
 class TestHtmlFetcher:
@@ -39,7 +39,7 @@ class TestHtmlFetcher:
         expected_dir = os.path.join(self.temp_dir, "raw_html")
         assert os.path.exists(expected_dir)
 
-    @patch("universal_scraper.core.html_fetcher.cloudscraper.create_scraper")
+    @patch("webagent.core.html_fetcher.cloudscraper.create_scraper")
     def test_fetch_with_cloudscraper_method_exists(self, mock_scraper):
         """Test that fetch_with_cloudscraper method exists and is callable"""
         fetcher = HtmlFetcher(temp_dir=self.temp_dir)
@@ -94,7 +94,7 @@ class TestHtmlFetcher:
         for header in required_headers:
             assert header in fetcher.headers
 
-    @patch("universal_scraper.core.html_fetcher.cloudscraper.create_scraper")
+    @patch("webagent.core.html_fetcher.cloudscraper.create_scraper")
     def test_cloudscraper_integration(self, mock_scraper):
         """Test CloudScraper integration setup"""
         mock_scraper_instance = Mock()

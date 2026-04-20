@@ -1,10 +1,10 @@
 """
-universal_scraper.core.web_ui
+webagent.core.web_ui
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Local web UI package for Universal Scraper.
+Local web UI package for WebAgent.
 
 Public surface:
-  main()        — CLI entry point (universal-scraper-ui command)
+  main()        — CLI entry point (webagent-ui command)
   create_app()  — Flask application factory
 """
 

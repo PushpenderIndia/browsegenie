@@ -196,7 +196,7 @@ def create_app() -> Flask:
             if env_var:
                 api_key = os.getenv(env_var, "")
 
-        from universal_scraper.core.agent import start_plan
+        from webagent.core.agent import start_plan
         task = start_plan(requirement, provider, model or "gemini-2.5-flash", api_key)
         return jsonify({"task_id": task.task_id})
 
@@ -206,7 +206,7 @@ def create_app() -> Flask:
 
     @app.route("/api/agent/stream/<task_id>")
     def api_agent_stream(task_id: str):
-        from universal_scraper.core.agent import agent_tasks
+        from webagent.core.agent import agent_tasks
         task = agent_tasks.get(task_id)
         if not task:
             return jsonify({"error": "Task not found"}), 404
@@ -254,7 +254,7 @@ def create_app() -> Flask:
             if env_var:
                 api_key = os.getenv(env_var, "")
 
-        from universal_scraper.core.browser_agent.agent.sessions import create_session
+        from webagent.core.browser_agent.agent.sessions import create_session
         session = create_session(
             task=task,
             model=model,
@@ -270,7 +270,7 @@ def create_app() -> Flask:
 
     @app.route("/api/browser-agent/stream/<session_id>")
     def api_browser_agent_stream(session_id: str):
-        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        from webagent.core.browser_agent.agent.sessions import get_session
         session = get_session(session_id)
         if not session:
             return jsonify({"error": "Session not found"}), 404
@@ -302,7 +302,7 @@ def create_app() -> Flask:
 
     @app.route("/api/browser-agent/stop/<session_id>", methods=["POST"])
     def api_browser_agent_stop(session_id: str):
-        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        from webagent.core.browser_agent.agent.sessions import get_session
         session = get_session(session_id)
         if not session:
             return jsonify({"error": "Session not found"}), 404
@@ -315,7 +315,7 @@ def create_app() -> Flask:
 
     @app.route("/api/browser-agent/playback/<session_id>")
     def api_browser_agent_playback(session_id: str):
-        from universal_scraper.core.browser_agent.agent.sessions import get_session
+        from webagent.core.browser_agent.agent.sessions import get_session
         session = get_session(session_id)
         if not session:
             return jsonify({"error": "Session not found"}), 404

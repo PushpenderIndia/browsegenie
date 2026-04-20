@@ -52,7 +52,7 @@ def browse(
 
     Examples::
 
-        from universal_scraper import browse
+        from webagent import browse
 
         # Basic task with Gemini (default) - logs printed automatically
         result = browse(

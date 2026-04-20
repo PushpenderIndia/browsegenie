@@ -1,6 +1,6 @@
 # Roadmap
 
-This document outlines the planned features and improvements for Universal Scraper.
+This document outlines the planned features and improvements for WebAgent.
 
 ## Save Token (High Priority)
 

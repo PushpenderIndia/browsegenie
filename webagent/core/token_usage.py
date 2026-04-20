@@ -1,5 +1,5 @@
 """
-Token usage tracking for Universal Scraper AI API calls.
+Token usage tracking for WebAgent AI API calls.
 
 Provides dataclasses and helpers to capture, accumulate, and summarise
 token consumption from both the Google Gemini (google-genai) and

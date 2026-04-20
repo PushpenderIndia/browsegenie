@@ -14,10 +14,10 @@ class TestDataExtractor:
         self.temp_dir = tempfile.mkdtemp()
         self.output_dir = tempfile.mkdtemp()
 
-    @patch("universal_scraper.core.data_extractor.genai.Client")
+    @patch("webagent.core.data_extractor.genai.Client")
     def test_init_with_api_key(self, mock_client):
         """Test DataExtractor initialization with API key"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         mock_client_instance = Mock()
         mock_client.return_value = mock_client_instance
@@ -34,10 +34,10 @@ class TestDataExtractor:
         assert extractor.temp_dir == self.temp_dir
         mock_client.assert_called_once_with(api_key="test_key")
 
-    @patch("universal_scraper.core.data_extractor.genai.Client")
+    @patch("webagent.core.data_extractor.genai.Client")
     def test_init_with_env_var(self, mock_client):
         """Test DataExtractor initialization with env variable"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         mock_client_instance = Mock()
         mock_client.return_value = mock_client_instance
@@ -51,7 +51,7 @@ class TestDataExtractor:
 
     def test_init_no_api_key(self):
         """Test DataExtractor initialization without API key"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(
@@ -61,10 +61,10 @@ class TestDataExtractor:
                     temp_dir=self.temp_dir, output_dir=self.output_dir
                 )
 
-    @patch("universal_scraper.core.data_extractor.LITELLM_AVAILABLE", True)
+    @patch("webagent.core.data_extractor.LITELLM_AVAILABLE", True)
     def test_init_litellm_model(self):
         """Test DataExtractor initialization with LiteLLM model"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         extractor = DataExtractor(
             api_key="test_key",
@@ -77,10 +77,10 @@ class TestDataExtractor:
 
     def test_directories_created(self):
         """Test that required directories are created"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-            with patch("universal_scraper.core.data_extractor.genai.Client"):
+            with patch("webagent.core.data_extractor.genai.Client"):
                 extractor = DataExtractor(
                     temp_dir=self.temp_dir, output_dir=self.output_dir
                 )
@@ -90,10 +90,10 @@ class TestDataExtractor:
 
     def test_enable_cache_setting(self):
         """Test cache enable/disable setting"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-            with patch("universal_scraper.core.data_extractor.genai.Client"):
+            with patch("webagent.core.data_extractor.genai.Client"):
                 # Test with cache enabled
                 extractor = DataExtractor(
                     temp_dir=self.temp_dir,
@@ -114,10 +114,10 @@ class TestDataExtractor:
 
     def test_default_model_name(self):
         """Test default model name setting"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-            with patch("universal_scraper.core.data_extractor.genai.Client"):
+            with patch("webagent.core.data_extractor.genai.Client"):
                 extractor = DataExtractor(
                     temp_dir=self.temp_dir, output_dir=self.output_dir
                 )
@@ -125,10 +125,10 @@ class TestDataExtractor:
 
     def test_extraction_history_initialized(self):
         """Test that extraction history is initialized"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-            with patch("universal_scraper.core.data_extractor.genai.Client"):
+            with patch("webagent.core.data_extractor.genai.Client"):
                 extractor = DataExtractor(
                     temp_dir=self.temp_dir, output_dir=self.output_dir
                 )
@@ -137,10 +137,10 @@ class TestDataExtractor:
 
     def test_logger_configured(self):
         """Test that logger is properly configured"""
-        from universal_scraper.core.data_extractor import DataExtractor
+        from webagent.core.data_extractor import DataExtractor
 
         with patch.dict(os.environ, {"GEMINI_API_KEY": "test_key"}):
-            with patch("universal_scraper.core.data_extractor.genai.Client"):
+            with patch("webagent.core.data_extractor.genai.Client"):
                 extractor = DataExtractor(
                     temp_dir=self.temp_dir, output_dir=self.output_dir
                 )

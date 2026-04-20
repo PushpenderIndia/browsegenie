@@ -1,7 +1,7 @@
 """
-CLI entry point for the Universal Scraper Web UI.
+CLI entry point for the WebAgent Web UI.
 
-Invoked via the `universal-scraper-ui` console script.
+Invoked via the `webagent-ui` console script.
 """
 
 import argparse
@@ -38,8 +38,8 @@ def main() -> None:
         sys.exit(1)
 
     parser = argparse.ArgumentParser(
-        prog="universal-scraper-ui",
-        description="Universal Scraper — local web UI",
+        prog="webagent-ui",
+        description="WebAgent — local web UI",
     )
     parser.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=7860, help="Port (default: 7860)")
@@ -59,7 +59,7 @@ def main() -> None:
 
     print()
     print("  ╔══════════════════════════════════════╗")
-    print("  ║      Universal Scraper  Web UI       ║")
+    print("  ║      WebAgent  Web UI       ║")
     print("  ╚══════════════════════════════════════╝")
     print(f"  Server  →  {server_url}")
     print("  Press Ctrl+C to stop.")

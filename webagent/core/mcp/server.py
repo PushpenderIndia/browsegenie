@@ -1,5 +1,5 @@
 """
-Main MCP server implementation for Universal Scraper.
+Main MCP server implementation for WebAgent.
 
 This module contains the main server class and configuration.
 """
@@ -20,16 +20,16 @@ from ... import __version__
 logger = logging.getLogger(__name__)
 
 
-class UniversalScraperMCPServer:
+class WebAgentMCPServer:
     """
-    Main MCP server class for Universal Scraper.
+    Main MCP server class for WebAgent.
 
     This class encapsulates the MCP server functionality and provides
     a clean interface for managing the scraper tools.
     """
 
     def __init__(self):
-        self.server_name = "universal-scraper"
+        self.server_name = "webagent"
         self.server_version = __version__
         self._server = Server(self.server_name)
         self._tool_manager = ToolManager()
@@ -44,8 +44,8 @@ class UniversalScraperMCPServer:
     def get_scraper(self):
         """Get or create a scraper instance."""
         if self._scraper_instance is None:
-            from ...scraper import UniversalScraper
-            self._scraper_instance = UniversalScraper()
+            from ...scraper import WebAgent
+            self._scraper_instance = WebAgent()
         return self._scraper_instance
 
     def set_scraper_instance(self, scraper):
@@ -110,5 +110,5 @@ class UniversalScraperMCPServer:
 
 async def create_and_run_server() -> None:
     """Create and run the MCP server."""
-    server = UniversalScraperMCPServer()
+    server = WebAgentMCPServer()
     await server.run()

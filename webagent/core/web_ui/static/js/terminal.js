@@ -15,5 +15,5 @@ function addLogLine(level, message) {
 
 function clearLogs() {
   document.getElementById("terminal").innerHTML =
-    '<div class="term-prompt">$ universal-scraper-ui --ready</div>';
+    '<div class="term-prompt">$ webagent-ui --ready</div>';
 }

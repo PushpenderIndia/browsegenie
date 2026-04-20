@@ -1,11 +1,11 @@
 """
-Universal Scraper Module
+WebAgent Module
 A Python module for AI-powered web scraping with customizable field extraction.
 
 Usage:
-    from universal_scraper import UniversalScraper
+    from webagent import WebAgent
 
-    scraper = UniversalScraper(api_key="your_gemini_api_key")
+    scraper = WebAgent(api_key="your_gemini_api_key")
     scraper.set_fields(
         ["company_name", "job_title", "apply_link", "salary_range"]
     )
@@ -32,7 +32,7 @@ except ImportError:
     completion = None
 
 
-class UniversalScraper:
+class WebAgent:
     """
     A modular web scraping system that fetches HTML, cleans it, and extracts
     structured data using AI with customizable field extraction.
@@ -47,7 +47,7 @@ class UniversalScraper:
         model_name: Optional[str] = None,
     ):
         """
-        Initialize the Universal Scraper.
+        Initialize the WebAgent.
 
         Args:
             api_key: AI provider API key. For Gemini, can use
@@ -485,7 +485,7 @@ def scrape(
     Returns:
         Extracted data dictionary
     """
-    scraper = UniversalScraper(api_key=api_key, model_name=model_name)
+    scraper = WebAgent(api_key=api_key, model_name=model_name)
     scraper.set_fields(fields)
     return scraper.scrape_url(url, format=format)
 
@@ -508,7 +508,7 @@ if __name__ == "__main__":
         exit(1)
 
     # Initialize scraper with custom model (optional)
-    scraper = UniversalScraper(api_key=api_key, model_name="gemini-2.5-flash")
+    scraper = WebAgent(api_key=api_key, model_name="gemini-2.5-flash")
 
     # Set custom fields
     scraper.set_fields(

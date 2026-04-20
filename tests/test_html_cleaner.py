@@ -3,7 +3,7 @@
 import pytest
 import tempfile
 from unittest.mock import patch
-from universal_scraper.core.html_cleaner import HtmlCleaner
+from webagent.core.html_cleaner import HtmlCleaner
 
 
 class TestHtmlCleaner:

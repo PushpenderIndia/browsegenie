@@ -1,5 +1,5 @@
 """
-Setup script for Universal Scraper package
+Setup script for WebAgent package
 """
 
 from setuptools import setup, find_packages
@@ -7,8 +7,8 @@ import os
 
 # Get version from the package
 def get_version():
-    """Get version from universal_scraper/__init__.py"""
-    version_file = os.path.join(os.path.dirname(__file__), 'universal_scraper', '__init__.py')
+    """Get version from webagent/__init__.py"""
+    version_file = os.path.join(os.path.dirname(__file__), 'webagent', '__init__.py')
     with open(version_file, 'r') as f:
         for line in f:
             if line.startswith('__version__'):
@@ -24,7 +24,7 @@ try:
         long_description = f.read()
 except FileNotFoundError:
     long_description = """
-    Universal Scraper - AI-powered web scraping with customizable
+    WebAgent - AI-powered web scraping with customizable
     field extraction
 
     A Python module that uses AI to automatically extract structured data
@@ -33,7 +33,7 @@ except FileNotFoundError:
     """
 
 setup(
-    name="universal-scraper",
+    name="webagent",
     version=get_version(),
     author="Witeso",
     author_email="support@witeso.com",
@@ -42,7 +42,7 @@ setup(
     ),
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/pushpenderindia/universal-scraper",
+    url="https://github.com/pushpenderindia/webagent",
     packages=find_packages(),
     py_modules=["main"],
     classifiers=[
@@ -87,9 +87,9 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "universal-scraper=main:main",
-            "universal-scraper-mcp=universal_scraper.mcp_server:main_sync",
-            "universal-scraper-ui=universal_scraper.web_ui:main",
+            "webagent=main:main",
+            "webagent-mcp=webagent.mcp_server:main_sync",
+            "webagent-ui=webagent.web_ui:main",
         ],
     },
     keywords=[
@@ -120,8 +120,8 @@ setup(
         "tool calling agent",
     ],
     project_urls={
-        "Bug Reports": "https://github.com/pushpenderindia/universal-scraper/issues",
-        "Source": "https://github.com/pushpenderindia/universal-scraper",
-        "Documentation": "https://github.com/pushpenderindia/universal-scraper/wiki",
+        "Bug Reports": "https://github.com/pushpenderindia/webagent/issues",
+        "Source": "https://github.com/pushpenderindia/webagent",
+        "Documentation": "https://github.com/pushpenderindia/webagent/wiki",
     },
 )

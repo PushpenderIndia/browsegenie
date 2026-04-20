@@ -1,17 +1,17 @@
-<h1 align="center"> Universal Scraper</h1>
+<h1 align="center"> WebAgent</h1>
 
 <h2 align="center"> Agentic browser automation and web scraping, just using a prompt</h2>
 
 <p align="center">
-<a href="https://www.codefactor.io/repository/github/pushpenderindia/universal-scraper"><img alt="pypi" src="https://www.codefactor.io/repository/github/pushpenderindia/universal-scraper/badge"></a>  
-<a href="https://socket.dev/pypi/package/universal-scraper/overview"><img alt="pypi" src="https://socket.dev/api/badge/pypi/package/universal-scraper/latest?artifact_id=tar-gz"></a>
-<img alt="CodeQL Status" src="https://github.com/pushpenderindia/universal-scraper/actions/workflows/codeql-analysis.yml/badge.svg">
-<a href="https://codecov.io/gh/pushpenderindia/universal-scraper"><img alt="codecov" src="https://codecov.io/gh/pushpenderindia/universal-scraper/branch/main/graph/badge.svg"></a>
-<a href="https://pypi.org/project/universal-scraper/"><img alt="pypi" src="https://img.shields.io/pypi/v/universal-scraper.svg"></a>
-<a href="https://pepy.tech/project/universal-scraper?versions=1*&versions=2*&versions=3*"><img alt="Downloads" src="https://pepy.tech/badge/universal-scraper"></a>
-<a href="https://pepy.tech/project/universal-scraper?versions=1*&versions=2*&versions=3*"><img alt="Downloads" src="https://pepy.tech/badge/universal-scraper/month"></a>
-<a href="https://github.com/pushpenderindia/universal-scraper/commits/main"><img alt="GitHub lastest commit" src="https://img.shields.io/github/last-commit/pushpenderindia/universal-scraper?color=blue&style=flat-square"></a>
-<a href="#"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/universal-scraper?style=flat-square"></a>
+<a href="https://www.codefactor.io/repository/github/pushpenderindia/webagent"><img alt="pypi" src="https://www.codefactor.io/repository/github/pushpenderindia/webagent/badge"></a>  
+<a href="https://socket.dev/pypi/package/webagent/overview"><img alt="pypi" src="https://socket.dev/api/badge/pypi/package/webagent/latest?artifact_id=tar-gz"></a>
+<img alt="CodeQL Status" src="https://github.com/pushpenderindia/webagent/actions/workflows/codeql-analysis.yml/badge.svg">
+<a href="https://codecov.io/gh/pushpenderindia/webagent"><img alt="codecov" src="https://codecov.io/gh/pushpenderindia/webagent/branch/main/graph/badge.svg"></a>
+<a href="https://pypi.org/project/webagent/"><img alt="pypi" src="https://img.shields.io/pypi/v/webagent.svg"></a>
+<a href="https://pepy.tech/project/webagent?versions=1*&versions=2*&versions=3*"><img alt="Downloads" src="https://pepy.tech/badge/webagent"></a>
+<a href="https://pepy.tech/project/webagent?versions=1*&versions=2*&versions=3*"><img alt="Downloads" src="https://pepy.tech/badge/webagent/month"></a>
+<a href="https://github.com/pushpenderindia/webagent/commits/main"><img alt="GitHub lastest commit" src="https://img.shields.io/github/last-commit/pushpenderindia/webagent?color=blue&style=flat-square"></a>
+<a href="#"><img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/webagent?style=flat-square"></a>
 </p>
 
 **An AI Agent that can do any kind of browser automation task and web scraping, just using a single prompt.**
@@ -27,7 +27,7 @@ When the page layout changes the agent detects it automatically and regenerates 
 ## Table of Contents
 
 - [Web UI - No-Code Mode](#web-ui--no-code-mode)
-- [How Universal Scraper Works](HOW_IT_WORKS.md)
+- [How WebAgent Works](HOW_IT_WORKS.md)
 - [Installation (Recommended)](#installation-recommended)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
@@ -55,20 +55,20 @@ When the page layout changes the agent detects it automatically and regenerates 
 
 ## Web UI - No-Code Mode
 
-The fastest way to use Universal Scraper - no Python required. Install the package and launch the local web UI with one command:
+The fastest way to use WebAgent - no Python required. Install the package and launch the local web UI with one command:
 
 ```bash
-pip install universal-scraper
-universal-scraper-ui
+pip install webagent
+webagent-ui
 ```
 
 Your browser opens automatically at `http://127.0.0.1:7860`.
 
-![Universal Scraper Web UI - Scraper Agent](docs/Scraper_Agent.png)
+![WebAgent Web UI - Scraper Agent](docs/Scraper_Agent.png)
 
 **Browser Agent Mode** - Do any kind of Browser Automation using Prompt!
 
-![Universal Scraper Web UI - Browser Agent](docs/Browser_Agent.png)
+![WebAgent Web UI - Browser Agent](docs/Browser_Agent.png)
 
 ### What you can do in the UI
 
@@ -88,22 +88,22 @@ Your browser opens automatically at `http://127.0.0.1:7860`.
 ### CLI options
 
 ```bash
-universal-scraper-ui --port 8080        # custom port
-universal-scraper-ui --host 0.0.0.0    # bind to all interfaces
-universal-scraper-ui --no-browser      # skip auto-opening the browser
+webagent-ui --port 8080        # custom port
+webagent-ui --host 0.0.0.0    # bind to all interfaces
+webagent-ui --no-browser      # skip auto-opening the browser
 ```
 
 --------------------------------------------------------------------------
 
-## Why Universal Scraper?
+## Why WebAgent?
 
 ### Traditional scraping and automation is brittle
 
 Writing a scraper the old way means hand-crafting BeautifulSoup4 selectors by reading raw HTML. Browser automation means writing fragile scripts full of hardcoded XPaths and `time.sleep()` calls. The moment a website updates its layout, everything breaks. Teams end up spending more time maintaining scrapers than using the data they collect.
 
-### Universal Scraper fixes this
+### WebAgent fixes this
 
-Universal Scraper is two tools in one:
+WebAgent is two tools in one:
 
 **1. AI Scraper** — Instead of hard-coded selectors, the agent **generates a custom BeautifulSoup4 extractor on the fly** by analysing a compressed snapshot of the page:
 
@@ -119,21 +119,21 @@ When the page layout changes the agent detects the structural difference, regene
 
 **2. Browser Agent** — Describe any browser task in plain English and the agent handles the rest. It opens a real Chromium browser, reads the live page state, and decides which actions to take — navigate, click, type, scroll, extract — step by step, until the task is complete. No scripts to write, no selectors to maintain. Works on JavaScript-heavy SPAs, login-walled pages, and multi-step workflows that a simple HTTP scraper can never reach.
 
-## How Universal Scraper Works
+## How WebAgent Works
 
 For a full technical breakdown — pipeline diagram, live working example, HTML cleaner internals, and token cost comparisons — see **[HOW_IT_WORKS.md](HOW_IT_WORKS.md)**.
 
 ## Installation (Recommended)
 
 ```
-pip install universal-scraper
+pip install webagent
 ```
 
 ## Installation (Global level on Mac)
 
 ```
 brew install pipx
-sudo pipx install "universal-scraper[mcp]" --global
+sudo pipx install "webagent[mcp]" --global
 ```
 
 ## Installation
@@ -183,28 +183,28 @@ export ANTHROPIC_API_KEY="your_anthropic_api_key_here"
 **Option D: Pass API key directly**
 ```python
 # For any provider - just pass the API key directly
-scraper = UniversalScraper(api_key="your_api_key")
+scraper = WebAgent(api_key="your_api_key")
 ```
 
 ### 2. Basic Usage
 
 ```python
-from universal_scraper import UniversalScraper
+from webagent import WebAgent
 
 # Option 1: Auto-detect provider (uses Gemini by default)
-scraper = UniversalScraper(api_key="your_gemini_api_key")
+scraper = WebAgent(api_key="your_gemini_api_key")
 
 # Option 2: Specify Gemini model explicitly
-scraper = UniversalScraper(api_key="your_gemini_api_key", model_name="gemini-3.1-flash-lite-preview")
+scraper = WebAgent(api_key="your_gemini_api_key", model_name="gemini-3.1-flash-lite-preview")
 
 # Option 3: Use OpenAI
-scraper = UniversalScraper(api_key="your_openai_api_key", model_name="gpt-4")
+scraper = WebAgent(api_key="your_openai_api_key", model_name="gpt-4")
 
 # Option 4: Use Anthropic Claude
-scraper = UniversalScraper(api_key="your_anthropic_api_key", model_name="claude-3-sonnet-20240229")
+scraper = WebAgent(api_key="your_anthropic_api_key", model_name="claude-3-sonnet-20240229")
 
 # Option 5: Use any other provider supported by LiteLLM
-scraper = UniversalScraper(api_key="your_api_key", model_name="llama-2-70b-chat")
+scraper = WebAgent(api_key="your_api_key", model_name="llama-2-70b-chat")
 
 # Set the fields you want to extract
 scraper.set_fields([
@@ -234,7 +234,7 @@ print(f"CSV data saved to: {result.get('saved_to')}")
 For quick one-off scraping:
 
 ```python
-from universal_scraper import scrape
+from webagent import scrape
 
 # Quick scraping with default JSON format
 data = scrape(
@@ -275,7 +275,7 @@ print(data['data'])  # The extracted data
 Run any browser automation task from code — the same capability available in the web UI, as a single function call.
 
 ```python
-from universal_scraper import browse
+from webagent import browse
 
 result = browse(
     task="Go to news.ycombinator.com and return the top 5 story titles",
@@ -291,7 +291,7 @@ print(result["success"])   # True if completed successfully
 
 Logs are printed automatically so you can follow along in real time:
 
-![Universal Scraper - Browser Agent](docs/Run_Browser_Agent_From_Code.png)
+![WebAgent - Browser Agent](docs/Run_Browser_Agent_From_Code.png)
 
 **With OpenAI or Anthropic** — provider is auto-detected from the model name:
 
@@ -378,7 +378,7 @@ result = browse(
 
 ## Export Formats
 
-Universal Scraper supports multiple output formats to suit your data processing needs:
+WebAgent supports multiple output formats to suit your data processing needs:
 
 ### JSON Export (Default)
 ```python
@@ -436,40 +436,40 @@ results = scraper.scrape_multiple_urls(urls, save_to_files=True, format='csv')
 
 ```bash
 # Gemini (default) - auto-detects from environment
-universal-scraper https://example.com/jobs --output jobs.json
+webagent https://example.com/jobs --output jobs.json
 
 # OpenAI GPT models
-universal-scraper https://example.com/products --api-key YOUR_OPENAI_KEY --model gpt-4 --format csv
+webagent https://example.com/products --api-key YOUR_OPENAI_KEY --model gpt-4 --format csv
 
 # Anthropic Claude models  
-universal-scraper https://example.com/data --api-key YOUR_ANTHROPIC_KEY --model claude-3-haiku-20240307
+webagent https://example.com/data --api-key YOUR_ANTHROPIC_KEY --model claude-3-haiku-20240307
 
 # Custom fields extraction
-universal-scraper https://example.com/listings --fields product_name product_price product_rating
+webagent https://example.com/listings --fields product_name product_price product_rating
 
 # Batch processing multiple URLs
-universal-scraper --urls urls.txt --output-dir results --format csv --model gpt-4o-mini
+webagent --urls urls.txt --output-dir results --format csv --model gpt-4o-mini
 
 # Verbose logging with any provider
-universal-scraper https://example.com --api-key YOUR_KEY --model gpt-4 --verbose
+webagent https://example.com --api-key YOUR_KEY --model gpt-4 --verbose
 ```
 
 **🔧 Advanced CLI Options:**
 ```bash
 # Set custom extraction fields
-universal-scraper URL --fields title price description availability
+webagent URL --fields title price description availability
 
 # Use environment variables (auto-detected)
 export OPENAI_API_KEY="your_key"
-universal-scraper URL --model gpt-4
+webagent URL --model gpt-4
 
 # Multiple output formats
-universal-scraper URL --format json    # Default
-universal-scraper URL --format csv     # Spreadsheet-ready
+webagent URL --format json    # Default
+webagent URL --format csv     # Spreadsheet-ready
 
 # Batch processing
 echo -e "https://site1.com\nhttps://site2.com" > urls.txt
-universal-scraper --urls urls.txt --output-dir batch_results
+webagent --urls urls.txt --output-dir batch_results
 ```
 
 **🔗 Provider Support**: All 100+ models supported by LiteLLM work in CLI! See [LiteLLM Providers](https://docs.litellm.ai/docs/providers) for complete list.
@@ -481,13 +481,13 @@ python main.py https://example.com/jobs --api-key YOUR_KEY --model gpt-4
 
 ## MCP Server Usage
 
-Universal Scraper works as an MCP (Model Context Protocol) server, allowing AI assistants to scrape websites directly.
+WebAgent works as an MCP (Model Context Protocol) server, allowing AI assistants to scrape websites directly.
 
 ### Quick Setup
 
 1. **Install with MCP support:**
 ```bash
-pip install universal-scraper
+pip install webagent
 ```
 
 2. **Set your AI API key:**
@@ -502,8 +502,8 @@ Add this to your Claude Code MCP settings:
 ```json
 {
   "mcpServers": {
-    "universal-scraper": {
-      "command": "universal-scraper-mcp"
+    "webagent": {
+      "command": "webagent-mcp"
     }
   }
 }
@@ -512,7 +512,7 @@ Add this to your Claude Code MCP settings:
 or Run this command in your terminal
 
 ```
-claude mcp add universal-scraper universal-scraper-mcp
+claude mcp add webagent webagent-mcp
 ```
 
 ![](docs/claude_code_integration.png)
@@ -524,8 +524,8 @@ Add this to your Cursor MCP configuration:
 ```json
 {
   "mcpServers": {
-    "universal-scraper": {
-      "command": "universal-scraper-mcp"
+    "webagent": {
+      "command": "webagent-mcp"
     }
   }
 }
@@ -549,7 +549,7 @@ Once configured, just ask your AI assistant:
 
 ## Cache Management
 ```python
-scraper = UniversalScraper(api_key="your_key")
+scraper = WebAgent(api_key="your_key")
 
 # View cache statistics
 stats = scraper.get_cache_stats()
@@ -573,7 +573,7 @@ scraper.enable_cache()   # Re-enable
 ### Multiple URLs
 
 ```python
-scraper = UniversalScraper(api_key="your_api_key")
+scraper = WebAgent(api_key="your_api_key")
 scraper.set_fields(["title", "price", "description"])
 
 urls = [
@@ -598,7 +598,7 @@ for result in results:
 ### Custom Configuration
 
 ```python
-scraper = UniversalScraper(
+scraper = WebAgent(
     api_key="your_api_key",
     temp_dir="custom_temp",      # Custom temporary directory
     output_dir="custom_output",  # Custom output directory  
@@ -630,11 +630,11 @@ result = scraper.scrape_url("https://ecommerce-site.com", save_to_file=True)
 
 ## API Reference
 
-### UniversalScraper Class
+### WebAgent Class
 
 #### Constructor
 ```python
-UniversalScraper(api_key=None, temp_dir="temp", output_dir="output", log_level=logging.INFO, model_name=None)
+WebAgent(api_key=None, temp_dir="temp", output_dir="output", log_level=logging.INFO, model_name=None)
 ```
 
 - `api_key`: AI provider API key (auto-detects provider, or set specific env vars)
@@ -747,7 +747,7 @@ scraper.set_fields([
 
 ## Multi-Provider AI Support
 
-Universal Scraper now supports multiple AI providers through LiteLLM integration:
+WebAgent now supports multiple AI providers through LiteLLM integration:
 
 ### Supported Providers
 - **Google Gemini** (Default): `gemini-3.1-flash-lite-preview`, `gemini-1.5-pro`, etc.
@@ -761,21 +761,21 @@ Universal Scraper now supports multiple AI providers through LiteLLM integration
 
 ```python
 # Gemini (Default - Free tier available)
-scraper = UniversalScraper(api_key="your_gemini_key")
+scraper = WebAgent(api_key="your_gemini_key")
 # Auto-detects as gemini-3.1-flash-lite-preview
 
 # OpenAI
-scraper = UniversalScraper(api_key="sk-...", model_name="gpt-4")
+scraper = WebAgent(api_key="sk-...", model_name="gpt-4")
 
 # Anthropic Claude
-scraper = UniversalScraper(api_key="sk-ant-...", model_name="claude-3-haiku-20240307")
+scraper = WebAgent(api_key="sk-ant-...", model_name="claude-3-haiku-20240307")
 
 # Environment variable approach
 # Set GEMINI_API_KEY, OPENAI_API_KEY, or ANTHROPIC_API_KEY
-scraper = UniversalScraper()  # Auto-detects from env vars
+scraper = WebAgent()  # Auto-detects from env vars
 
 # Any other provider from LiteLLM (see link above for model names)
-scraper = UniversalScraper(api_key="your_api_key", model_name="llama-2-70b-chat")
+scraper = WebAgent(api_key="your_api_key", model_name="llama-2-70b-chat")
 ```
 
 ### Model Configuration Guide
@@ -833,7 +833,7 @@ Enable debug logging to see what's happening:
 
 ```python
 import logging
-scraper = UniversalScraper(api_key="your_key", log_level=logging.DEBUG)
+scraper = WebAgent(api_key="your_key", log_level=logging.DEBUG)
 ```
 
 ## Roadmap
@@ -842,7 +842,7 @@ See [ROADMAP.md](ROADMAP.md) for planned features and improvements.
 
 ## Contributors
 
-[Contributors List](https://github.com/pushpenderindia/universal-scraper/graphs/contributors)
+[Contributors List](https://github.com/pushpenderindia/webagent/graphs/contributors)
 
 ## Contributing
 
@@ -853,9 +853,9 @@ See [ROADMAP.md](ROADMAP.md) for planned features and improvements.
 5. Test PEP Standard: 
 
 ```
-flake8 universal_scraper/ --count --select=E9,F63,F7,F82 --show-source --statistics
+flake8 webagent/ --count --select=E9,F63,F7,F82 --show-source --statistics
 
-flake8 universal_scraper/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+flake8 webagent/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 ```
 
 6. Submit a pull request

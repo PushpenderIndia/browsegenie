@@ -5,12 +5,12 @@ A command-line interface for AI-powered web scraping with
 multi-provider support.
 
 Usage:
-    universal-scraper <URL> [--output OUTPUT_FILE] [--api-key API_KEY]
+    webagent <URL> [--output OUTPUT_FILE] [--api-key API_KEY]
     [--model MODEL]
 
 Example:
-    universal-scraper https://example.com/jobs --output jobs_data.json
-    universal-scraper https://example.com/products --api-key YOUR_KEY
+    webagent https://example.com/jobs --output jobs_data.json
+    webagent https://example.com/products --api-key YOUR_KEY
     --model gpt-4
 """
 
@@ -22,7 +22,7 @@ import sys
 from datetime import datetime
 from urllib.parse import urlparse
 
-from universal_scraper.scraper import UniversalScraper
+from webagent.scraper import WebAgent
 
 
 def setup_logging(level):
@@ -106,7 +106,7 @@ def scrape_multiple_urls(urls_file, scraper, output_dir, format_type="json"):
 async def run_mcp_server():
     """Run the MCP server"""
     try:
-        from universal_scraper.mcp_server import main as mcp_main
+        from webagent.mcp_server import main as mcp_main
         await mcp_main()
     except ImportError:
         print("Error: MCP dependencies not installed. Install with: pip install mcp")
@@ -125,14 +125,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  universal-scraper https://example.com/jobs
-  universal-scraper https://example.com/products --output products.json
-  universal-scraper https://news.ycombinator.com --api-key YOUR_GEMINI_KEY
-  universal-scraper https://example.com/data --api-key YOUR_OPENAI_KEY
+  webagent https://example.com/jobs
+  webagent https://example.com/products --output products.json
+  webagent https://news.ycombinator.com --api-key YOUR_GEMINI_KEY
+  webagent https://example.com/data --api-key YOUR_OPENAI_KEY
   --model gpt-4
-  universal-scraper https://example.com/content
+  webagent https://example.com/content
   --api-key YOUR_ANTHROPIC_KEY --model claude-3-haiku-20240307
-  universal-scraper --urls urls.txt --output-dir scraped_data --format csv
+  webagent --urls urls.txt --output-dir scraped_data --format csv
 
 Multi-Provider Support:
   • Gemini (default): Set GEMINI_API_KEY or use --api-key with Gemini key
@@ -229,7 +229,7 @@ Multi-Provider Support:
 
     # Handle MCP server mode
     if args.mcp_server:
-        print("Starting Universal Scraper MCP Server...")
+        print("Starting WebAgent MCP Server...")
         print("Server ready to receive MCP requests via stdio")
         asyncio.run(run_mcp_server())
         return
@@ -239,7 +239,7 @@ Multi-Provider Support:
         api_key = args.api_key or args.gemini_key
 
         # Initialize scraper with multi-provider support
-        scraper = UniversalScraper(
+        scraper = WebAgent(
             api_key=api_key,
             temp_dir=args.temp_dir,
             output_dir=args.output_dir,

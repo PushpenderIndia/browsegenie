@@ -119,8 +119,8 @@ class ScrapeURLTool(BaseTool):
             model_name = arguments.get("model_name")
 
             if api_key or model_name:
-                from ...scraper import UniversalScraper
-                scraper = UniversalScraper(
+                from ...scraper import WebAgent
+                scraper = WebAgent(
                     api_key=api_key,
                     model_name=model_name
                 )
@@ -221,8 +221,8 @@ class ScrapeMultipleURLsTool(BaseTool):
             model_name = arguments.get("model_name")
 
             if api_key or model_name:
-                from ...scraper import UniversalScraper
-                scraper = UniversalScraper(
+                from ...scraper import WebAgent
+                scraper = WebAgent(
                     api_key=api_key,
                     model_name=model_name
                 )
@@ -312,8 +312,8 @@ class ConfigureScraperTool(BaseTool):
             temp_dir = arguments.get("temp_dir", "temp")
             output_dir = arguments.get("output_dir", "output")
 
-            from ...scraper import UniversalScraper
-            scraper_instance = UniversalScraper(
+            from ...scraper import WebAgent
+            scraper_instance = WebAgent(
                 api_key=api_key,
                 model_name=model_name,
                 temp_dir=temp_dir,

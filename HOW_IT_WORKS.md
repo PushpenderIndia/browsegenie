@@ -1,4 +1,4 @@
-# How Universal Scraper Works
+# How WebAgent Works
 
 ## Table of Contents
 
@@ -84,15 +84,15 @@ graph TB
 Real session scraping 117 laptop products from a live e-commerce site with Gemini 2.5 Pro:
 
 ```python
->>> from universal_scraper import UniversalScraper
->>> scraper = UniversalScraper(api_key="AIzxxxxxxxxxxxxxxxxxxxxx", model_name="gemini-2.5-pro")
+>>> from webagent import WebAgent
+>>> scraper = WebAgent(api_key="AIzxxxxxxxxxxxxxxxxxxxxx", model_name="gemini-2.5-pro")
 2025-09-17 01:22:30 - code_cache      - INFO - CodeCache initialized with database: temp/extraction_cache.db
 2025-09-17 01:22:30 - data_extractor  - INFO - Code caching enabled
 2025-09-17 01:22:30 - data_extractor  - INFO - Using Google Gemini API with model: gemini-2.5-pro
 2025-09-17 01:22:30 - data_extractor  - INFO - Initialized DataExtractor with model: gemini-2.5-pro
 
 >>> scraper.set_fields(["product_name", "product_price", "product_rating", "product_description", "availability"])
-2025-09-17 01:22:31 - universal_scraper - INFO - Extraction fields updated: ['product_name', 'product_price', 'product_rating', 'product_description', 'availability']
+2025-09-17 01:22:31 - webagent - INFO - Extraction fields updated: ['product_name', 'product_price', 'product_rating', 'product_description', 'availability']
 
 >>> result = scraper.scrape_url(
 ...     "https://webscraper.io/test-sites/e-commerce/allinone/computers/laptops",

@@ -4,7 +4,7 @@ import tempfile
 import os
 import sqlite3
 from unittest.mock import patch
-from universal_scraper.core.code_cache import CodeCache
+from webagent.core.code_cache import CodeCache
 
 
 class TestCodeCache:

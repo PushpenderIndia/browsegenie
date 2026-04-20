@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-MCP Server for Universal Scraper
+MCP Server for WebAgent
 
 This module implements a Model Context Protocol (MCP) server that exposes
-the Universal Scraper functionality as tools that can be used by AI models.
+the WebAgent functionality as tools that can be used by AI models.
 """
 
 import asyncio
@@ -12,7 +12,7 @@ from .core.mcp.server import create_and_run_server
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("universal-scraper-mcp")
+logger = logging.getLogger("webagent-mcp")
 
 
 async def main():

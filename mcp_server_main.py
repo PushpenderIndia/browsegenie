@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Standalone MCP Server for Universal Scraper
+Standalone MCP Server for WebAgent
 
-Entry point for running the Universal Scraper as an MCP server.
+Entry point for running the WebAgent as an MCP server.
 
 Usage:
     python mcp_server_main.py
@@ -11,20 +11,20 @@ Usage:
 import asyncio
 import sys
 import logging
-from universal_scraper.core.mcp.server import create_and_run_server
+from webagent.core.mcp.server import create_and_run_server
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("universal-scraper-mcp")
+logger = logging.getLogger("webagent-mcp")
 
 
 def main_entry():
     """Main entry point for the MCP server console script"""
     try:
-        logger.info("Starting Universal Scraper MCP Server")
+        logger.info("Starting WebAgent MCP Server")
         asyncio.run(create_and_run_server())
     except KeyboardInterrupt:
         logger.info("MCP Server stopped by user")
