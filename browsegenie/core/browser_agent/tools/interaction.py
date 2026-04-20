@@ -1,21 +1,44 @@
+"""User-interaction tools: click, fill, keyboard, hover, select, drag."""
+
 from playwright.sync_api import Page
 
+from .constants import INTERACTIVE_SEL
 
-def click(page: Page, selector: str = None, x: int = None, y: int = None, index: int = None) -> dict:
+
+def click(
+    page: Page,
+    selector: str = None,
+    x: int = None,
+    y: int = None,
+    index: int = None,
+) -> dict:
+    """Click an element by index, CSS selector, or pixel coordinates.
+
+    Index mode re-uses the same selector as get_interactive_elements so that
+    the index the LLM received always maps to the correct DOM element.
+    scroll_into_view_if_needed is called first to handle off-screen elements
+    that would otherwise timeout waiting to become visible.
+    """
     if index is not None:
-        elements = page.query_selector_all(
-            "a[href], button, input, select, textarea, [onclick], [role='button'], [role='link']"
-        )
-        if index < len(elements):
-            elements[index].click(timeout=10000)
-            return {"clicked": f"element_index={index}"}
-        return {"error": f"Index {index} out of range ({len(elements)} elements found)"}
+        elements = page.query_selector_all(INTERACTIVE_SEL)
+        if index >= len(elements):
+            return {"error": f"Index {index} out of range ({len(elements)} elements found)"}
+        el = elements[index]
+        try:
+            el.scroll_into_view_if_needed(timeout=3000)
+        except Exception:
+            pass
+        el.click(timeout=10000)
+        return {"clicked": f"element_index={index}"}
+
     if selector:
         page.click(selector, timeout=10000)
         return {"clicked": selector}
+
     if x is not None and y is not None:
         page.mouse.click(x, y)
         return {"clicked": f"coordinates=({x},{y})"}
+
     return {"error": "Provide selector, index, or x/y coordinates"}
 
 
