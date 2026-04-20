@@ -60,19 +60,20 @@ def capture_page_state(browser: "BrowserSession") -> str:
             () => {{
                 const sel = '{INTERACTIVE_SEL_JS}';
                 return Array.from(document.querySelectorAll(sel))
+                    .filter(el => el.offsetParent !== null)
                     .slice(0, {_MAX_ELEMENTS})
                     .map((el, i) => ({{
-                        index:   i,
-                        tag:     el.tagName.toLowerCase(),
-                        text:    (el.innerText || el.value || el.placeholder || '').slice(0, 80).trim(),
-                        href:    el.href   || null,
-                        type:    el.type   || null,
-                        visible: el.offsetParent !== null,
+                        index: i,
+                        tag:   el.tagName.toLowerCase(),
+                        text:  (el.innerText || el.value || el.placeholder || '').slice(0, 80).trim(),
+                        href:  el.href || null,
+                        type:  el.type || null,
                     }}));
             }}
         """)
-        # Strip None values and use compact separators to minimise token count
-        elements = [{k: v for k, v in el.items() if v is not None} for el in raw]
+        # Strip null/empty values; visible is omitted — every element in the
+        # list is visible by construction (filtered in JS above).
+        elements = [{k: v for k, v in el.items() if v} for el in raw]
         return (
             f"URL: {url}\n"
             f"Title: {title}\n\n"
