@@ -1,6 +1,6 @@
 <h1 align="center"> Universal Scraper</h1>
 
-<h2 align="center"> The Python package for scraping data from any website</h2>
+<h2 align="center"> Agentic browser automation and web scraping, just using a prompt</h2>
 
 <p align="center">
 <a href="https://www.codefactor.io/repository/github/pushpenderindia/universal-scraper"><img alt="pypi" src="https://www.codefactor.io/repository/github/pushpenderindia/universal-scraper/badge"></a>  
