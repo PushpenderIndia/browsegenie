@@ -1,11 +1,13 @@
-let _baSessionId   = null;
-let _baSource      = null;
-let _baBusy        = false;
+let _baSessionId    = null;
+let _baSource       = null;
+let _baBusy         = false;
+let _baLive         = false;   // true while CDP stream is active
+let _baMode         = "shared"; // agent-only | shared | human-only
 
-let _baFrames      = [];
+let _baFrames       = [];
 let _baCurrentFrame = -1;
-let _baPlayTimer   = null;
-let _baIsPlaying   = false;
+let _baPlayTimer    = null;
+let _baIsPlaying    = false;
 
 // ── Tab switching ─────────────────────────────────────────────────────────
 
@@ -55,11 +57,15 @@ async function baStart() {
   _baClearAll();
   _baSetStatus("running", "Starting agent…");
 
+  // Read the mode from the UI switcher
+  const modeEl = document.querySelector(".ba-mode-btn.active");
+  _baMode = modeEl ? modeEl.dataset.mode : "shared";
+
   try {
     const res = await fetch("/api/browser-agent/start", {
       method:  "POST",
       headers: {"Content-Type": "application/json"},
-      body:    JSON.stringify({task, provider, model, api_key: apiKey, headless}),
+      body:    JSON.stringify({task, provider, model, api_key: apiKey, headless, control_mode: _baMode}),
     });
     const { session_id, error } = await res.json();
     if (error) throw new Error(error);
@@ -79,6 +85,7 @@ async function baStop() {
     try { await fetch(`/api/browser-agent/stop/${_baSessionId}`, {method: "POST"}); } catch (_) {}
     _baSessionId = null;
   }
+  _baSetLive(false);
   _baSetBusy(false);
   _baSetStatus("idle", "Stopped");
 }
@@ -99,6 +106,7 @@ function _baConnect(sessionId) {
   es.onerror = () => {
     es.close();
     _baSource = null;
+    _baSetLive(false);
     _baSetBusy(false);
     _baSetStatus("idle", "Disconnected");
   };
@@ -106,6 +114,25 @@ function _baConnect(sessionId) {
 
 function _baHandleEvent(event) {
   switch (event.type) {
+
+    case "connection":
+      if (event.data.status === "connected") {
+        _baSetLive(true);
+        _baLogEntry("info",
+          event.data.cdp
+            ? "Live browser stream started (CDP screencast)"
+            : "Live browser stream started (screenshot mode)"
+        );
+      } else {
+        _baSetLive(false);
+      }
+      break;
+
+    case "live_frame":
+      // Show the CDP frame in the preview during an active session
+      if (_baLive) _baRenderLiveFrame(event.data);
+      break;
+
     case "start":
       _baLogEntry("info", "Task: " + event.data.task);
       break;
@@ -125,11 +152,21 @@ function _baHandleEvent(event) {
       break;
     }
 
+    case "control": {
+      const { source, action, payload, result } = event.data;
+      const tag = source === "human" ? "👤" : "🤖";
+      _baLogEntry("control",
+        `${tag} ${action}(${_baFmtArgs(payload)}) → ${result.status}`
+      );
+      break;
+    }
+
     case "tokens":
       updateTokenUsage(event.data, "ba-");
       break;
 
     case "screenshot":
+      // Always store screenshot frames for playback
       _baPushFrame(event.data);
       break;
 
@@ -142,7 +179,9 @@ function _baHandleEvent(event) {
       _baLogEntry("done", event.data.summary);
       _baShowResult(event.data);
       _baSetBusy(false);
-      _baRevealPlayback();
+      _baSetLive(false);
+      // Switch from live view → screenshot playback
+      _baSwitchToPlayback();
       if (_baSource) { _baSource.close(); _baSource = null; }
       break;
 
@@ -150,13 +189,41 @@ function _baHandleEvent(event) {
       _baSetStatus("error", "Error");
       _baLogEntry("error", event.data.message);
       _baSetBusy(false);
-      if (_baFrames.length > 1) _baRevealPlayback();
+      _baSetLive(false);
+      if (_baFrames.length > 1) _baSwitchToPlayback();
       if (_baSource) { _baSource.close(); _baSource = null; }
       break;
   }
 }
 
-// ── Screenshot frame store ────────────────────────────────────────────────
+// ── Live frame rendering (CDP stream) ─────────────────────────────────────
+
+function _baRenderLiveFrame(data) {
+  const img   = document.getElementById("ba-screenshot");
+  const empty = document.getElementById("ba-preview-empty");
+  img.src = "data:image/jpeg;base64," + data.image;
+  img.style.display   = "block";
+  empty.style.display = "none";
+
+  const urlEl = document.getElementById("ba-page-url");
+  if (data.url) {
+    urlEl.textContent = data.url;
+    urlEl.title = data.url;
+  }
+}
+
+// ── Switch from live view to playback mode ────────────────────────────────
+
+function _baSwitchToPlayback() {
+  _baSetLive(false);
+  if (_baFrames.length < 1) return;
+  // Jump to last frame
+  _baCurrentFrame = _baFrames.length - 1;
+  _baRenderFrame(_baCurrentFrame);
+  _baRevealPlayback();
+}
+
+// ── Screenshot frame store (for playback) ─────────────────────────────────
 
 function _baPushFrame(data) {
   _baFrames.push({
@@ -167,11 +234,14 @@ function _baPushFrame(data) {
     tool:        data.tool  || "",
     frame_index: _baFrames.length,
   });
-  _baCurrentFrame = _baFrames.length - 1;
-  _baRenderFrame(_baCurrentFrame);
+  // During live mode we don't update the preview here — live_frame handles it
+  if (!_baLive) {
+    _baCurrentFrame = _baFrames.length - 1;
+    _baRenderFrame(_baCurrentFrame);
+  }
 }
 
-// ── Render a single frame ─────────────────────────────────────────────────
+// ── Render a single screenshot frame ─────────────────────────────────────
 
 function _baRenderFrame(idx) {
   const frame = _baFrames[idx];
@@ -283,6 +353,131 @@ function baNextFrame() {
   }
 }
 
+// ── Human control (click on live preview) ─────────────────────────────────
+
+/**
+ * Map a mouse event on the <img> element to 1280×720 viewport coordinates.
+ *
+ * object-fit:contain means the rendered image may be smaller than the element
+ * and centred inside it (letterboxed top/bottom or pillarboxed left/right).
+ * We must subtract the blank-space offset before scaling, otherwise clicks in
+ * the padding area still produce coordinates and everything is shifted.
+ *
+ * Returns {x, y} in viewport pixels, or null if the click is outside the
+ * actual rendered image area.
+ */
+function _baViewportCoords(e, img) {
+  const rect   = img.getBoundingClientRect();
+  const VIEW_W = 1280, VIEW_H = 720;
+
+  // Dimensions of the rendered image inside the element (object-fit:contain)
+  const imgAspect  = VIEW_W / VIEW_H;           // 1.7̄8̄
+  const elemAspect = rect.width / rect.height;
+
+  let rw, rh, ox = 0, oy = 0;
+  if (elemAspect > imgAspect) {
+    // Element is wider → pillarboxed (blank left + right)
+    rh = rect.height;
+    rw = rh * imgAspect;
+    ox = (rect.width - rw) / 2;
+  } else {
+    // Element is taller → letterboxed (blank top + bottom)
+    rw = rect.width;
+    rh = rw / imgAspect;
+    oy = (rect.height - rh) / 2;
+  }
+
+  const relX = e.clientX - rect.left - ox;
+  const relY = e.clientY - rect.top  - oy;
+
+  // Click is in the blank padding — ignore
+  if (relX < 0 || relY < 0 || relX > rw || relY > rh) return null;
+
+  return {
+    x: Math.round(relX / rw * VIEW_W),
+    y: Math.round(relY / rh * VIEW_H),
+  };
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const img = document.getElementById("ba-screenshot");
+  if (!img) return;
+
+  img.addEventListener("click", e => {
+    if (!_baLive || !_baSessionId || _baMode === "agent-only") return;
+    const coords = _baViewportCoords(e, img);
+    if (!coords) return;                         // clicked in blank padding
+    _baSendControl("click", coords);
+    const rect = img.getBoundingClientRect();
+    _baShowClickRipple(e.clientX - rect.left, e.clientY - rect.top);
+  });
+
+  // Keyboard control when preview is focused
+  img.setAttribute("tabindex", "0");
+  img.addEventListener("keydown", e => {
+    if (!_baLive || !_baSessionId || _baMode === "agent-only") return;
+    e.preventDefault();
+    _baSendControl("press_key", {key: e.key});
+  });
+});
+
+async function _baSendControl(action, payload) {
+  if (!_baSessionId) return;
+  try {
+    await fetch(`/api/browser-agent/control/${_baSessionId}`, {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({action, payload}),
+    });
+  } catch (_) {}
+}
+
+function _baShowClickRipple(x, y) {
+  const body = document.getElementById("ba-preview-body");
+  if (!body) return;
+  const ripple = document.createElement("div");
+  ripple.className = "ba-click-ripple";
+  ripple.style.left = x + "px";
+  ripple.style.top  = y + "px";
+  body.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+}
+
+// ── Mode switcher ─────────────────────────────────────────────────────────
+
+function baSetMode(mode) {
+  _baMode = mode;
+  document.querySelectorAll(".ba-mode-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.mode === mode);
+  });
+  // Push mode to backend if session is active
+  if (_baSessionId) {
+    fetch(`/api/browser-agent/mode/${_baSessionId}`, {
+      method:  "POST",
+      headers: {"Content-Type": "application/json"},
+      body:    JSON.stringify({mode}),
+    }).catch(() => {});
+  }
+  // Update cursor style on preview image
+  const img = document.getElementById("ba-screenshot");
+  if (img) {
+    img.style.cursor = (_baLive && mode !== "agent-only") ? "crosshair" : "default";
+  }
+}
+
+// ── LIVE badge state ──────────────────────────────────────────────────────
+
+function _baSetLive(live) {
+  _baLive = live;
+  const badge = document.getElementById("ba-live-badge");
+  if (badge) badge.style.display = live ? "inline-flex" : "none";
+  // Update cursor
+  const img = document.getElementById("ba-screenshot");
+  if (img) {
+    img.style.cursor = (live && _baMode !== "agent-only") ? "crosshair" : "default";
+  }
+}
+
 // ── Log helpers ───────────────────────────────────────────────────────────
 
 function _baLogEntry(type, message) {
@@ -290,7 +485,10 @@ function _baLogEntry(type, message) {
   const empty = body.querySelector(".ba-empty-log");
   if (empty) empty.remove();
 
-  const ICONS = {step:"→", tool:"⚙", result:"↩", info:"ℹ", done:"✓", error:"✗"};
+  const ICONS = {
+    step:"→", tool:"⚙", result:"↩", info:"ℹ",
+    done:"✓", error:"✗", control:"⇄",
+  };
   const div = document.createElement("div");
   div.className = `ba-log-entry ba-log-${type}`;
   div.innerHTML =
@@ -330,13 +528,15 @@ function _baClearAll() {
   _baFrames       = [];
   _baCurrentFrame = -1;
   _baStopPlayTimer();
+  _baSetLive(false);
 
   document.getElementById("ba-log-body").innerHTML =
     '<div class="ba-empty-log">Start a task to see agent activity here.</div>';
 
   const img = document.getElementById("ba-screenshot");
   img.src = "";
-  img.style.display = "none";
+  img.style.display  = "none";
+  img.style.cursor   = "default";
   document.getElementById("ba-preview-empty").style.display = "";
   document.getElementById("ba-page-url").textContent = "";
 

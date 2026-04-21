@@ -237,12 +237,13 @@ def create_app() -> Flask:
 
     @app.route("/api/browser-agent/start", methods=["POST"])
     def api_browser_agent_start():
-        body     = request.get_json(force=True) or {}
-        task     = (body.get("task") or "").strip()
-        provider = body.get("provider", "google")
-        model    = body.get("model", "")
-        api_key  = (body.get("api_key") or "").strip()
-        headless = body.get("headless", True)
+        body         = request.get_json(force=True) or {}
+        task         = (body.get("task") or "").strip()
+        provider     = body.get("provider", "google")
+        model        = body.get("model", "")
+        api_key      = (body.get("api_key") or "").strip()
+        headless     = body.get("headless", True)
+        control_mode = body.get("control_mode", "shared")
 
         if not task:
             return jsonify({"error": "task is required"}), 400
@@ -261,6 +262,7 @@ def create_app() -> Flask:
             provider=provider,
             api_key=api_key,
             headless=headless,
+            control_mode=control_mode,
         )
         return jsonify({"session_id": session.session_id})
 
@@ -321,5 +323,61 @@ def create_app() -> Flask:
             return jsonify({"error": "Session not found"}), 404
         frames = session.get_playback_frames()
         return jsonify({"frames": frames, "total": len(frames)})
+
+    # ------------------------------------------------------------------
+    # Browser Agent: human control
+    #
+    # POST /api/browser-agent/control/<session_id>
+    # Body: { "action": "click", "payload": { "x": 120, "y": 340 } }
+    #
+    # Supported actions:
+    #   click    { x, y }
+    #   type     { text }
+    #   press_key{ key }
+    #   navigate { url }
+    #   scroll   { dx, dy }
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/control/<session_id>", methods=["POST"])
+    def api_browser_agent_control(session_id: str):
+        from browsegenie.core.browser_agent.agent.sessions import get_session
+        session = get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found"}), 404
+
+        body    = request.get_json(force=True) or {}
+        action  = (body.get("action") or "").strip()
+        payload = body.get("payload") or {}
+
+        if not action:
+            return jsonify({"error": "action is required"}), 400
+
+        result = session.execute_control(action, payload)
+        return jsonify(result)
+
+    # ------------------------------------------------------------------
+    # Browser Agent: control mode
+    #
+    # GET  /api/browser-agent/mode/<session_id>      → { mode }
+    # POST /api/browser-agent/mode/<session_id>      body: { mode }
+    # ------------------------------------------------------------------
+
+    @app.route("/api/browser-agent/mode/<session_id>", methods=["GET", "POST"])
+    def api_browser_agent_mode(session_id: str):
+        from browsegenie.core.browser_agent.agent.sessions import get_session
+        session = get_session(session_id)
+        if not session:
+            return jsonify({"error": "Session not found"}), 404
+
+        if request.method == "GET":
+            return jsonify({"mode": session.get_mode()})
+
+        body = request.get_json(force=True) or {}
+        mode = (body.get("mode") or "shared").strip()
+        try:
+            session.set_mode(mode)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        return jsonify({"mode": session.get_mode()})
 
     return app

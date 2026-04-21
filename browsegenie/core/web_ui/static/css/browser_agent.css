@@ -94,7 +94,43 @@
 
 .ba-page-url{
   font-family:var(--font-mono);font-size:11px;color:var(--text3);
-  max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* ── LIVE badge ──────────────────────────────────────────────────────── */
+.ba-live-badge{
+  display:none;align-items:center;gap:5px;
+  padding:2px 8px;border-radius:4px;
+  background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.4);
+  font-size:10px;font-weight:700;letter-spacing:.8px;
+  color:#f87171;text-transform:uppercase;flex-shrink:0;
+}
+.ba-live-dot{
+  width:6px;height:6px;border-radius:50%;
+  background:#f87171;
+  animation:ba-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ba-pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.4;transform:scale(.8)}
+}
+
+/* ── Mode switcher ───────────────────────────────────────────────────── */
+.ba-mode-switcher{
+  display:flex;gap:2px;
+  background:var(--surface2);border:1px solid var(--border2);border-radius:6px;
+  padding:2px;
+}
+.ba-mode-btn{
+  padding:3px 9px;border:none;border-radius:4px;
+  cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;
+  color:var(--text3);background:transparent;
+  transition:all .15s;white-space:nowrap;
+}
+.ba-mode-btn:hover{color:var(--text2)}
+.ba-mode-btn.active{
+  background:var(--surface);color:var(--text);
+  box-shadow:0 1px 2px rgba(0,0,0,.3);
 }
 
 .ba-preview-body{
@@ -111,6 +147,19 @@
 
 #ba-screenshot{
   width:100%;height:100%;object-fit:contain;display:block;
+}
+#ba-screenshot:focus{outline:none}
+
+/* ── Click ripple (human control feedback) ───────────────────────────── */
+.ba-click-ripple{
+  position:absolute;width:24px;height:24px;
+  border-radius:50%;border:2px solid var(--accent);
+  pointer-events:none;transform:translate(-50%,-50%);
+  animation:ba-ripple .6s ease-out forwards;
+}
+@keyframes ba-ripple{
+  0%  {opacity:1;transform:translate(-50%,-50%) scale(.5)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(2)}
 }
 
 /* ── Playback controls ───────────────────────────────────────────────── */
@@ -161,6 +210,11 @@
   color:var(--accent);flex:1;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
+
+/* ── Control log entry ───────────────────────────────────────────────── */
+.ba-log-control{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.15)}
+.ba-log-control .ba-log-icon{color:#a78bfa}
+.ba-log-control .ba-log-msg{color:#c4b5fd}
 
 /* ── Result section ──────────────────────────────────────────────────── */
 .ba-result-section{

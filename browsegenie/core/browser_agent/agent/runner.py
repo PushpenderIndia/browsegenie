@@ -2,14 +2,19 @@
 
 import json
 import queue
+import time
 from typing import Any, Dict, Optional
 
+from ..browser.control import ControlLayer, SHARED
 from ..browser.session import BrowserSession
 from ..playback.recorder import ScreenshotRecorder
 from ..tools.registry import schemas_for, run_tool
 from .history import HistoryManager
 from .llm import LLMClient
 from .prompts import SYSTEM_PROMPT, capture_page_state
+
+# Minimum interval between live_frame emissions (seconds). ~10 fps max.
+_LIVE_FRAME_MIN_INTERVAL = 0.10
 
 
 class BrowserAgent:
@@ -24,16 +29,21 @@ class BrowserAgent:
         api_key: Optional[str] = None,
         headless: bool = True,
         max_steps: int = 50,
+        control_mode: str = SHARED,
     ) -> None:
         self._task      = task
         self._max_steps = max_steps
+        self._headless  = headless
         self._browser   = BrowserSession(headless=headless)
         self._llm       = LLMClient(model=model, provider=provider, api_key=api_key)
         self._queue: queue.Queue = queue.Queue()
         self._recorder  = ScreenshotRecorder()
         self._active    = False
+        self._control   = ControlLayer(mode=control_mode)
+        # Rate-limiter for live frames
+        self._last_live_ts: float = 0.0
 
-    # ── Public API ────────────────────────────────────────────────────────────
+    # ── Public API ────────────────────────────────────────────────────────
 
     @property
     def event_queue(self) -> queue.Queue:
@@ -43,15 +53,23 @@ class BrowserAgent:
     def recorder(self) -> ScreenshotRecorder:
         return self._recorder
 
+    @property
+    def control(self) -> ControlLayer:
+        return self._control
+
     def stop(self) -> None:
         self._active = False
         self._browser.stop()
 
-    # ── Main loop ─────────────────────────────────────────────────────────────
+    # ── Main loop ─────────────────────────────────────────────────────────
 
     def run(self) -> None:
         self._active = True
         self._browser.start()
+
+        # Start CDP screencast for live browser view
+        cdp_ok = self._browser.start_screencast(self._on_live_frame)
+        self._emit("connection", {"status": "connected", "cdp": cdp_ok})
 
         history = HistoryManager()
         history.add_system(SYSTEM_PROMPT)
@@ -71,13 +89,16 @@ class BrowserAgent:
                 if not self._active:
                     break
 
+                # Flush human actions queued since the last step
+                self._flush_human_actions()
+
                 history.set_step(step)
                 self._emit("step", {"step": step, "status": "thinking"})
 
                 response = self._llm.complete(history.get(), schemas_for(_last_tool))
                 self._emit("tokens", self._llm.token_stats())
 
-                msg          = response.choices[0].message
+                msg           = response.choices[0].message
                 assistant_msg = self._build_assistant_dict(msg)
                 history.add_assistant(assistant_msg)
 
@@ -85,6 +106,11 @@ class BrowserAgent:
                     if msg.content:
                         self._emit("log", {"message": msg.content})
                     break
+
+                # In human-only mode the agent skips actual tool execution
+                if not self._control.agent_can_act():
+                    self._emit("log", {"message": "[agent-only locked out — human-only mode]"})
+                    continue
 
                 finished, _last_tool = self._process_tool_calls(msg.tool_calls, step, history)
                 if finished:
@@ -126,9 +152,31 @@ class BrowserAgent:
             self._emit("error", {"message": str(exc)})
         finally:
             self._active = False
-            self._browser.stop()
+            self._browser.stop_screencast()
+            self._emit("connection", {"status": "disconnected"})
+            # In non-headless mode the browser window stays open after the task
+            # completes so the user can inspect or continue interacting with it.
+            # The Stop button calls agent.stop() directly which always closes it.
+            if self._headless:
+                self._browser.stop()
 
-    # ── Helpers ───────────────────────────────────────────────────────────────
+    # ── Helpers ───────────────────────────────────────────────────────────
+
+    def _flush_human_actions(self) -> None:
+        """
+        Execute all pending human control actions on the agent thread.
+
+        Playwright's sync API uses greenlet and is bound to the thread that
+        created the browser objects.  Human actions MUST be executed on this
+        same thread — calling Playwright from any other thread raises
+        ``greenlet.error: Cannot switch to a different thread``.
+
+        This is called at the start of each step AND after each individual
+        tool call so the maximum wait is one tool execution (~0.5–2 s),
+        not a full LLM round-trip (10–30 s).
+        """
+        for item in self._control.flush(self._browser):
+            self._emit("control", item)
 
     def _process_tool_calls(
         self, tool_calls, step: int, history: HistoryManager
@@ -162,6 +210,10 @@ class BrowserAgent:
             history.add_tool_result(tc.id, result_str, tool=name)
             last_tool = name
 
+            # Flush human actions between tool calls (agent thread only —
+            # Playwright's greenlet model forbids cross-thread page access)
+            self._flush_human_actions()
+
         return False, last_tool
 
     @staticmethod
@@ -189,6 +241,7 @@ class BrowserAgent:
         self._queue.put_nowait({"type": event_type, "data": data})
 
     def _emit_screenshot(self, step: int = 0, tool: str = "") -> None:
+        """Capture screenshot and emit as event + record frame for playback."""
         try:
             image = self._browser.screenshot_jpeg_b64()
             url   = self._browser.current_url()
@@ -205,3 +258,28 @@ class BrowserAgent:
             })
         except Exception:
             pass
+
+    def _on_live_frame(self, image_b64: str, metadata: dict) -> None:
+        """
+        CDP screencast callback — called on Playwright's thread.
+        Rate-limited to ~10 fps; must not make blocking Playwright calls.
+        """
+        now = time.monotonic()
+        if now - self._last_live_ts < _LIVE_FRAME_MIN_INTERVAL:
+            return
+        self._last_live_ts = now
+
+        url = ""
+        try:
+            url = self._browser.current_url()
+        except Exception:
+            pass
+
+        self._queue.put_nowait({
+            "type": "live_frame",
+            "data": {
+                "image":     image_b64,
+                "url":       url,
+                "timestamp": metadata.get("timestamp", now),
+            },
+        })

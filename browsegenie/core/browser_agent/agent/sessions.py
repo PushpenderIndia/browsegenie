@@ -2,6 +2,7 @@ import threading
 import uuid
 from typing import Dict, List, Optional
 
+from ..browser.control import SHARED
 from .runner import BrowserAgent
 
 _sessions: Dict[str, "BrowserAgentSession"] = {}
@@ -39,6 +40,18 @@ class BrowserAgentSession:
         self._agent.stop()
         self.done.set()
 
+    # ── Control passthrough ────────────────────────────────────────────────
+
+    def execute_control(self, action: str, payload: dict) -> dict:
+        """Queue a human control action. Returns immediately."""
+        return self._agent.control.enqueue_human(action, payload)
+
+    def get_mode(self) -> str:
+        return self._agent.control.mode
+
+    def set_mode(self, mode: str) -> None:
+        self._agent.control.set_mode(mode)
+
 
 def create_session(
     task: str,
@@ -46,6 +59,7 @@ def create_session(
     provider: str = "",
     api_key: str = "",
     headless: bool = True,
+    control_mode: str = SHARED,
 ) -> BrowserAgentSession:
     agent = BrowserAgent(
         task=task,
@@ -53,6 +67,7 @@ def create_session(
         provider=provider,
         api_key=api_key,
         headless=headless,
+        control_mode=control_mode,
     )
     session = BrowserAgentSession(agent)
     _sessions[session.session_id] = session

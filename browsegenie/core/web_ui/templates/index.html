@@ -255,7 +255,18 @@
       <div class="ba-preview-panel panel">
         <div class="panel-header">
           <span class="panel-title">Browser Preview</span>
+          <!-- LIVE badge (shown during CDP stream) -->
+          <span class="ba-live-badge" id="ba-live-badge">
+            <span class="ba-live-dot"></span>
+            LIVE
+          </span>
           <span class="ba-page-url" id="ba-page-url"></span>
+          <!-- Control mode switcher -->
+          <div class="ba-mode-switcher" title="Control mode">
+            <button class="ba-mode-btn" data-mode="agent-only" onclick="baSetMode('agent-only')">Agent</button>
+            <button class="ba-mode-btn active" data-mode="shared" onclick="baSetMode('shared')">Shared</button>
+            <button class="ba-mode-btn" data-mode="human-only" onclick="baSetMode('human-only')">Human</button>
+          </div>
         </div>
         <div class="ba-preview-body" id="ba-preview-body">
           <div class="ba-preview-empty" id="ba-preview-empty">
