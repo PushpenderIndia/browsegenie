@@ -21,15 +21,16 @@ FILL = {
     "type": "function",
     "function": {
         "name": "fill",
-        "description": "Type text",
+        "description": "Type text (index | selector)",
         "parameters": {
             "type": "object",
             "properties": {
-                "selector":    {"type": "string"},
                 "text":        {"type": "string"},
+                "index":       {"type": "integer"},
+                "selector":    {"type": "string"},
                 "clear_first": {"type": "boolean"},
             },
-            "required": ["selector", "text"],
+            "required": ["text"],
         },
     },
 }
