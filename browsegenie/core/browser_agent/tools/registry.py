@@ -1,19 +1,17 @@
-"""Tool dispatch: routes tool-call names to their handler functions.
+"""Tool dispatch: routes tool-call names to their handler functions."""
 
-Schemas live in schemas.py so this file stays focused on execution.
-"""
-
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from playwright.sync_api import Page
 
-from .schemas import TOOL_SCHEMAS
-from .navigation import navigate, go_back, go_forward, reload
+from .navigation  import navigate, go_back, go_forward, reload
 from .interaction import click, fill, press_key, hover, select_option, drag_and_drop
-from .extraction import get_page_content, find_elements, get_interactive_elements, execute_js
-from .scroll import scroll, scroll_to_element, scroll_to_bottom, scroll_to_top
-from .wait import wait_for_element, wait_for_load, wait_for_url
+from .extraction  import get_page_content, find_elements, get_interactive_elements, execute_js
+from .scroll      import scroll, scroll_to_element, scroll_to_bottom, scroll_to_top
+from .wait        import wait_for_element, wait_for_load, wait_for_url
 
+# Re-export so callers can do: from .registry import schemas_for, run_tool
+from .phases import schemas_for  # noqa: F401
 
 _DISPATCH: Dict[str, Any] = {
     "navigate":                 lambda page, a: navigate(page, **a),
@@ -41,11 +39,8 @@ _DISPATCH: Dict[str, Any] = {
 }
 
 
-def get_schemas() -> List[Dict]:
-    return TOOL_SCHEMAS
-
-
 def run_tool(page: Page, name: str, args: Dict[str, Any]) -> Dict:
+    """Execute *name* with *args* on *page*. Returns the tool result dict."""
     handler = _DISPATCH.get(name)
     if not handler:
         return {"error": f"Unknown tool: {name}"}

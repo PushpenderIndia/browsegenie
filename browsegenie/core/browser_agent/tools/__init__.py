@@ -1,3 +1,3 @@
-from .registry import get_schemas, run_tool
+from .registry import schemas_for, run_tool
 
-__all__ = ["get_schemas", "run_tool"]
+__all__ = ["schemas_for", "run_tool"]

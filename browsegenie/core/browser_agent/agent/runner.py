@@ -6,7 +6,7 @@ from typing import Any, Dict, Optional
 
 from ..browser.session import BrowserSession
 from ..playback.recorder import ScreenshotRecorder
-from ..tools.registry import get_schemas, run_tool
+from ..tools.registry import schemas_for, run_tool
 from .history import HistoryManager
 from .llm import LLMClient
 from .prompts import SYSTEM_PROMPT, capture_page_state
@@ -61,6 +61,7 @@ class BrowserAgent:
 
         _last_url: str = ""
         _stuck_steps: int = 0
+        _last_tool: Optional[str] = None
 
         try:
             self._emit("start", {"task": self._task})
@@ -73,7 +74,7 @@ class BrowserAgent:
                 history.set_step(step)
                 self._emit("step", {"step": step, "status": "thinking"})
 
-                response = self._llm.complete(history.get(), get_schemas())
+                response = self._llm.complete(history.get(), schemas_for(_last_tool))
                 self._emit("tokens", self._llm.token_stats())
 
                 msg          = response.choices[0].message
@@ -85,7 +86,7 @@ class BrowserAgent:
                         self._emit("log", {"message": msg.content})
                     break
 
-                finished = self._process_tool_calls(msg.tool_calls, step, history)
+                finished, _last_tool = self._process_tool_calls(msg.tool_calls, step, history)
                 if finished:
                     break
 
@@ -129,8 +130,12 @@ class BrowserAgent:
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
-    def _process_tool_calls(self, tool_calls, step: int, history: HistoryManager) -> bool:
-        """Execute each tool call in the LLM response.  Returns True when 'done' is called."""
+    def _process_tool_calls(
+        self, tool_calls, step: int, history: HistoryManager
+    ) -> tuple[bool, Optional[str]]:
+        """Execute each tool call. Returns ``(finished, last_tool_name)``."""
+        last_tool: Optional[str] = None
+
         for tc in tool_calls:
             name = tc.function.name
             try:
@@ -147,16 +152,17 @@ class BrowserAgent:
                     "data":         args.get("data") or {},
                     "total_frames": self._recorder.count(),
                 })
-                history.add_tool_result(tc.id, '{"status":"completed"}')
-                return True
+                history.add_tool_result(tc.id, '{"status":"completed"}', tool="done")
+                return True, "done"
 
             result     = run_tool(self._browser.page, name, args)
             result_str = json.dumps(result)
             self._emit("tool_result", {"step": step, "tool": name, "result": result})
             self._emit_screenshot(step=step, tool=name)
-            history.add_tool_result(tc.id, result_str)
+            history.add_tool_result(tc.id, result_str, tool=name)
+            last_tool = name
 
-        return False
+        return False, last_tool
 
     @staticmethod
     def _build_assistant_dict(msg) -> Dict[str, Any]:

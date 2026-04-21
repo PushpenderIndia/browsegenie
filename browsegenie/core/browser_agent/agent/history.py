@@ -11,10 +11,13 @@ compressed to prevent unbounded token growth:
     one-liner: "[step N — URL: https://...]"
   - Tool results older than TOOL_KEEP_STEPS steps are truncated to
     TOOL_RESULT_MAX_CHARS characters.
+  - Error results are compressed to a one-liner after just one step — the LLM
+    only needs the full Playwright stack trace immediately after it occurs.
   - System, initial-task, and assistant messages are never modified.
 """
 
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional
 
@@ -29,10 +32,11 @@ class _Kind(Enum):
 
 @dataclass
 class _Entry:
-    kind:    _Kind
-    message: Dict
-    step:    int
-    summary: Optional[str] = None   # compact replacement used when entry is old
+    kind:     _Kind
+    message:  Dict
+    step:     int
+    summary:  Optional[str] = None  # compact replacement used when entry is old
+    is_error: bool = field(default=False)
 
 
 class HistoryManager:
@@ -71,15 +75,14 @@ class HistoryManager:
     def add_assistant(self, msg: Dict) -> None:
         self._entries.append(_Entry(kind=_Kind.ASSISTANT, message=msg, step=self._step))
 
-    def add_tool_result(self, call_id: str, content: str) -> None:
-        preview = content[:120].replace("\n", " ")
-        if len(content) > 120:
-            preview += "…"
+    def add_tool_result(self, call_id: str, content: str, tool: str = "") -> None:
+        is_error, summary = self._classify(content, tool)
         self._entries.append(_Entry(
             kind=_Kind.TOOL,
             message={"role": "tool", "tool_call_id": call_id, "content": content},
             step=self._step,
-            summary=f"[step {self._step} result: {preview}]",
+            summary=summary,
+            is_error=is_error,
         ))
 
     def add_page_state(self, state: str) -> None:
@@ -104,7 +107,12 @@ class HistoryManager:
             age = self._step - entry.step
 
             if entry.kind == _Kind.TOOL:
-                if age > self.TOOL_KEEP_STEPS:
+                # Error results: keep full only for the current step so the LLM
+                # can react immediately; compress to a one-liner after that.
+                # The full Playwright stack trace is never useful two steps later.
+                if entry.is_error and age > 0:
+                    messages.append({**entry.message, "content": entry.summary})
+                elif age > self.TOOL_KEEP_STEPS:
                     body = entry.message["content"]
                     if len(body) > self.TOOL_RESULT_MAX_CHARS:
                         body = body[:self.TOOL_RESULT_MAX_CHARS] + "… [truncated]"
@@ -119,3 +127,33 @@ class HistoryManager:
                     messages.append(entry.message)
 
         return messages
+
+    # ── Private ───────────────────────────────────────────────────────────────
+
+    def _classify(self, content: str, tool: str) -> tuple:
+        """Return (is_error, summary) for a tool result string.
+
+        Primary detection: parse JSON and check for an "error" key.
+        Fallback detection: string prefix check for the rare case where the
+        content is not valid JSON (e.g. raw exception text from a failed call).
+        """
+        error_msg = ""
+
+        try:
+            parsed = json.loads(content)
+            if isinstance(parsed, dict) and "error" in parsed:
+                error_msg = str(parsed["error"])[:100].replace("\n", " ")
+        except (json.JSONDecodeError, Exception):
+            # Fallback: catch raw non-JSON error strings
+            stripped = content.lstrip()
+            if stripped.startswith('{"error"') or stripped.lower().startswith("error"):
+                error_msg = stripped[:100].replace("\n", " ")
+
+        if error_msg:
+            label = f"{tool}: " if tool else ""
+            return True, f"[step {self._step} {label}failed — {error_msg}]"
+
+        preview = content[:120].replace("\n", " ")
+        if len(content) > 120:
+            preview += "…"
+        return False, f"[step {self._step} result: {preview}]"

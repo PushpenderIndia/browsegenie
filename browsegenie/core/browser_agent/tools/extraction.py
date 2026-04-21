@@ -59,20 +59,26 @@ def find_elements(page: Page, selector: str, limit: int = 20) -> dict:
 
 
 def get_interactive_elements(page: Page) -> dict:
-    """List all interactive elements with their index numbers for use with click(index=N)."""
+    """List visible interactive elements with their index numbers for use with click(index=N).
+
+    Applies the same offsetParent visibility filter as capture_page_state so that
+    indices are consistent across page snapshots and explicit element lookups.
+    """
     elements = page.evaluate(f"""
         () => {{
             const sel = '{INTERACTIVE_SEL_JS}';
-            return Array.from(document.querySelectorAll(sel)).slice(0, 60).map((el, i) => ({{
-                index:   i,
-                tag:     el.tagName.toLowerCase(),
-                type:    el.type   || null,
-                text:    (el.innerText || el.value || el.placeholder || '').slice(0, 120).trim(),
-                href:    el.href   || null,
-                id:      el.id     || null,
-                name:    el.name   || null,
-                visible: el.offsetParent !== null,
-            }}));
+            return Array.from(document.querySelectorAll(sel))
+                .filter(el => el.offsetParent !== null)
+                .slice(0, 60)
+                .map((el, i) => ({{
+                    index: i,
+                    tag:   el.tagName.toLowerCase(),
+                    type:  el.type || null,
+                    text:  (el.innerText || el.value || el.placeholder || '').slice(0, 120).trim(),
+                    href:  el.href || null,
+                    id:    el.id   || null,
+                    name:  el.name || null,
+                }}));
         }}
     """)
     return {"elements": elements, "count": len(elements)}
