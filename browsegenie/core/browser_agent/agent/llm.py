@@ -59,6 +59,20 @@ class LLMClient:
             self._calls.append(tokens)
         return response
 
+    def complete_text(self, messages: List[Dict]) -> str:
+        """Plain text completion — no tool schemas, returns content string."""
+        kwargs: Dict[str, Any] = {
+            "model":    self._model,
+            "messages": messages,
+        }
+        if self._api_key:
+            kwargs["api_key"] = self._api_key
+        response = litellm.completion(**kwargs)
+        tokens = extract_litellm_tokens(response, self._model)
+        if tokens:
+            self._calls.append(tokens)
+        return response.choices[0].message.content or ""
+
     def token_stats(self) -> Dict[str, Any]:
         """Return cumulative token usage across all calls this session."""
         return summarise(self._calls)

@@ -137,10 +137,15 @@ function _baHandleEvent(event) {
       _baLogEntry("info", "Task: " + event.data.task);
       break;
 
-    case "step":
-      _baLogEntry("step", `Step ${event.data.step}`);
-      _baSetStatus("running", `Step ${event.data.step}`);
+    case "step": {
+      const isPlanStep = !!event.data.plan;
+      const stepLabel  = isPlanStep
+        ? `Plan Step ${event.data.step}`
+        : `Step ${event.data.step}`;
+      _baLogEntry(isPlanStep ? "plan-step" : "step", stepLabel);
+      _baSetStatus("running", stepLabel);
       break;
+    }
 
     case "tool_call":
       _baLogEntry("tool", `${event.data.tool}(${_baFmtArgs(event.data.args)})`);
@@ -280,9 +285,10 @@ function _baUpdatePlaybackUI() {
 
   const frame = _baFrames[current];
   if (frame) {
-    const label = frame.tool
-      ? `step ${frame.step} · ${frame.tool}`
-      : frame.step > 0 ? `step ${frame.step}` : "initial";
+    const prefix = frame.plan ? "plan step" : "step";
+    const label  = frame.tool
+      ? `${prefix} ${frame.step} · ${frame.tool}`
+      : frame.step > 0 ? `${prefix} ${frame.step}` : "initial";
     document.getElementById("ba-frame-label").textContent = label;
   }
 }
@@ -486,7 +492,7 @@ function _baLogEntry(type, message) {
   if (empty) empty.remove();
 
   const ICONS = {
-    step:"→", tool:"⚙", result:"↩", info:"ℹ",
+    step:"→", "plan-step":"↳", tool:"⚙", result:"↩", info:"ℹ",
     done:"✓", error:"✗", control:"⇄",
   };
   const div = document.createElement("div");

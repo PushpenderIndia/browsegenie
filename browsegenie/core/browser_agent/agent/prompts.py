@@ -14,6 +14,7 @@ decide its next action.
 import json
 from typing import TYPE_CHECKING
 
+from ..heuristic_resolver import KNOWN_TARGETS
 from ..tools.constants import INTERACTIVE_SEL_JS
 
 # Deferred import to break the circular dependency:
@@ -26,22 +27,28 @@ SYSTEM_PROMPT = (
     "You are a browser automation agent. Complete the given task using the provided tools.\n"
     "After each action you receive the updated page state: URL, interactive elements, and visible text.\n"
     "\n"
-    "Search forms:\n"
-    "- After fill(), ALWAYS submit by pressing Enter: press_key(key='Enter').\n"
-    "- NEVER try to click a search/submit button by index — search pages have a clear (×) button\n"
-    "  near the input that has a lower index than the submit button and will just erase your text.\n"
+    "Workflow — ALWAYS follow this order:\n"
+    "1. Call plan(task=...) FIRST with a description of what to accomplish.\n"
+    "   The plan tool generates and executes a step sequence automatically.\n"
+    "2. If plan succeeds: call done(summary=...) to finish.\n"
+    "3. If plan fails: read the 'message' and 'current_url' in the result, then:\n"
+    "   a. Take ONE targeted manual action to fix the blocker (fill, click, navigate, etc.).\n"
+    "   b. Then call plan(task=...) again describing the remaining work from the current state.\n"
+    "   Repeat until the task is complete.\n"
     "\n"
-    "Clicking elements:\n"
-    "- Call get_interactive_elements first to see element text and index, then click(index=N).\n"
-    "- Read the element text carefully — pick the element whose text matches what you want to click.\n"
-    "- Prefer click(selector=...) with a specific CSS selector when the element is identifiable.\n"
+    "Manual actions — element targeting (use when fixing a plan failure):\n"
+    "- Prefer semantic names as the 'selector' value — the system resolves them automatically:\n"
+    "  " + ", ".join(sorted(KNOWN_TARGETS)) + "\n"
+    "  Examples: fill(selector=\"username_field\", text=\"...\"), click(selector=\"submit_button\")\n"
+    "- Fall back to index=N only when no semantic name fits.\n"
+    "- Call get_interactive_elements first to see indices when needed.\n"
     "\n"
-    "Efficiency:\n"
-    "- Prefer find_elements(selector=...) for targeted DOM lookups over get_page_content.\n"
-    "- Only call get_page_content when you need broad full-page text not visible in the state.\n"
+    "Search forms (when acting manually):\n"
+    "- After fill(), submit with press_key(key='Enter') — never click the submit button by index.\n"
     "\n"
     "Completion:\n"
-    "- When the task is fully finished, call done with a clear summary."
+    "- Call done only after plan(task=...) returns success:true, or after you have verified\n"
+    "  manually that the task is fully complete."
 )
 
 _MAX_TEXT_CHARS = 1500

@@ -69,8 +69,11 @@
 .ba-log-icon{flex-shrink:0;width:14px;text-align:center;font-weight:700;margin-top:1px}
 .ba-log-msg{flex:1;word-break:break-all;color:#cdd6f4}
 
-.ba-log-step  .ba-log-icon{color:var(--text3)}
-.ba-log-step  .ba-log-msg{color:var(--text2);font-weight:600}
+.ba-log-step       .ba-log-icon{color:var(--text3)}
+.ba-log-step       .ba-log-msg{color:var(--text2);font-weight:600}
+
+.ba-log-plan-step  .ba-log-icon{color:var(--accent);opacity:.6}
+.ba-log-plan-step  .ba-log-msg{color:var(--text3);font-weight:600;padding-left:10px}
 
 .ba-log-tool{background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.1)}
 .ba-log-tool  .ba-log-icon{color:var(--accent)}

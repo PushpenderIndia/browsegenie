@@ -16,16 +16,17 @@ from .schemas import (
     GET_PAGE_CONTENT, FIND_ELEMENTS, GET_INTERACTIVE_ELEMENTS, EXECUTE_JS,
     SCROLL, SCROLL_TO_ELEMENT, SCROLL_TO_BOTTOM, SCROLL_TO_TOP,
     WAIT_FOR_ELEMENT, WAIT_FOR_LOAD, WAIT_FOR_URL,
-    DONE,
+    PLAN, DONE,
 )
 
-# Each phase always includes DONE so the agent can terminate at any point.
+# Each phase always includes PLAN and DONE.
+# PLAN is always first — the agent should prefer re-planning over manual steps.
 PHASE_SCHEMAS: Dict[str, List] = {
-    "navigate": [NAVIGATE, GO_BACK, GO_FORWARD, RELOAD, DONE],
-    "read":     [GET_PAGE_CONTENT, FIND_ELEMENTS, GET_INTERACTIVE_ELEMENTS, EXECUTE_JS,
+    "navigate": [PLAN, NAVIGATE, GO_BACK, GO_FORWARD, RELOAD, DONE],
+    "read":     [PLAN, GET_PAGE_CONTENT, FIND_ELEMENTS, GET_INTERACTIVE_ELEMENTS, EXECUTE_JS,
                  SCROLL, SCROLL_TO_ELEMENT, SCROLL_TO_BOTTOM, SCROLL_TO_TOP, DONE],
-    "interact": [CLICK, FILL, PRESS_KEY, HOVER, SELECT_OPTION, DRAG_AND_DROP, NAVIGATE, DONE],
-    "wait":     [WAIT_FOR_ELEMENT, WAIT_FOR_LOAD, WAIT_FOR_URL, DONE],
+    "interact": [PLAN, CLICK, FILL, PRESS_KEY, HOVER, SELECT_OPTION, DRAG_AND_DROP, NAVIGATE, DONE],
+    "wait":     [PLAN, WAIT_FOR_ELEMENT, WAIT_FOR_LOAD, WAIT_FOR_URL, DONE],
 }
 
 # Maps the last tool called → the phase most likely needed next.
@@ -62,6 +63,8 @@ _NEXT_PHASE: Dict[str, str] = {
     "wait_for_element": "read",
     "wait_for_load":    "read",
     "wait_for_url":     "read",
+    # After plan (success → loop ends; failure → AI needs to read page and decide next step).
+    "plan": "read",
 }
 
 
