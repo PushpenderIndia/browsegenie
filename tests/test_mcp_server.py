@@ -76,15 +76,13 @@ class TestHandleListTools:
 
     def test_exception_raises_configuration_error(self):
         """Test that a ToolManager failure is re-raised as ConfigurationError."""
+        import pytest
         server = BrowseGenieMCPServer()
         server._tool_manager.get_all_tools = MagicMock(
             side_effect=Exception("tool manager down")
         )
-        try:
+        with pytest.raises(ConfigurationError, match="tool manager down"):
             _run(server._handle_list_tools())
-            assert False, "Should have raised"
-        except ConfigurationError as exc:
-            assert "tool manager down" in str(exc)
 
 
 class TestHandleCallTool:
