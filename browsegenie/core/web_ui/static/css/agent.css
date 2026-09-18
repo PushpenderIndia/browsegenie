@@ -28,7 +28,7 @@
 .chat-msg.user .chat-bubble {
   background: var(--accent);
   color: #fff;
-  border-radius: 14px 14px 4px 14px;
+  border-radius: 14px 14px 4px;
 }
 
 .chat-msg.agent .chat-bubble {
